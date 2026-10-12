@@ -45,13 +45,18 @@
 
     <!-- 모바일/태블릿 터치 환경에서 자동 표시되는 아케이드 가상 컨트롤러 -->
     <section id="mobileControls" class="mobile-controls" aria-label="모바일 터치 컨트롤러">
-      <!-- 좌측 십자 방향키 (D-Pad: 슬라이드 드래그 및 멀티터치 지원) -->
-      <div id="dpadZone" class="dpad" role="group" aria-label="방향키 패드">
-        <button type="button" class="dpad-btn dpad-up" data-key="ArrowUp" aria-label="위로 이동 (사다리 오르기)">▲</button>
-        <button type="button" class="dpad-btn dpad-left" data-key="ArrowLeft" aria-label="왼쪽 이동">◀</button>
-        <div class="dpad-center" aria-hidden="true"></div>
-        <button type="button" class="dpad-btn dpad-right" data-key="ArrowRight" aria-label="오른쪽 이동">▶</button>
-        <button type="button" class="dpad-btn dpad-down" data-key="ArrowDown" aria-label="아래로 이동 (사다리 내려가기)">▼</button>
+      <!-- 좌측 360도 원형 아날로그 조이스틱 (세밀한 속도 및 대각선 조작 지원) -->
+      <div id="joystickZone" class="joystick-zone" role="group" aria-label="360도 원형 방향 조이스틱">
+        <div id="joystickBase" class="joystick-base">
+          <span class="joy-dir joy-up" data-dir="up" aria-hidden="true">▲</span>
+          <span class="joy-dir joy-left" data-dir="left" aria-hidden="true">◀</span>
+          <span class="joy-dir joy-right" data-dir="right" aria-hidden="true">▶</span>
+          <span class="joy-dir joy-down" data-dir="down" aria-hidden="true">▼</span>
+          <div class="joystick-ring" aria-hidden="true"></div>
+          <div id="joystickKnob" class="joystick-knob" aria-hidden="true">
+            <div class="knob-highlight"></div>
+          </div>
+        </div>
       </div>
 
       <!-- 우측 대형 점프 / 시작 버튼 -->

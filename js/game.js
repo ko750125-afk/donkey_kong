@@ -54,7 +54,7 @@
         this.difficulty = 'beginner';
       }
 
-      // 입력 상태 (키보드 + 모바일 가상 패드 통합)
+      // 입력 상태 (키보드 + 모바일 360° 원형 아날로그 조이스틱 통합)
       this.keys = {
         left: false,
         right: false,
@@ -62,6 +62,8 @@
         down: false,
         jump: false
       };
+      this.analogX = 0;
+      this.analogY = 0;
       this.jumpPressedOnce = false;
 
       // 엔티티 컨테이너
@@ -130,10 +132,22 @@
           e.preventDefault();
         }
 
-        if (e.code === 'ArrowLeft' || e.code === 'KeyA') this.keys.left = true;
-        if (e.code === 'ArrowRight' || e.code === 'KeyD') this.keys.right = true;
-        if (e.code === 'ArrowUp' || e.code === 'KeyW') this.keys.up = true;
-        if (e.code === 'ArrowDown' || e.code === 'KeyS') this.keys.down = true;
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+          this.keys.left = true;
+          this.analogX = 0;
+        }
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+          this.keys.right = true;
+          this.analogX = 0;
+        }
+        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+          this.keys.up = true;
+          this.analogY = 0;
+        }
+        if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+          this.keys.down = true;
+          this.analogY = 0;
+        }
         if (e.code === 'Space' || e.code === 'KeyZ') {
           if (!this.keys.jump) this.jumpPressedOnce = true;
           this.keys.jump = true;
@@ -262,10 +276,22 @@
     }
 
     setVirtualKey(code, pressed) {
-      if (code === 'ArrowLeft') this.keys.left = pressed;
-      if (code === 'ArrowRight') this.keys.right = pressed;
-      if (code === 'ArrowUp') this.keys.up = pressed;
-      if (code === 'ArrowDown') this.keys.down = pressed;
+      if (code === 'ArrowLeft') {
+        this.keys.left = pressed;
+        this.analogX = 0;
+      }
+      if (code === 'ArrowRight') {
+        this.keys.right = pressed;
+        this.analogX = 0;
+      }
+      if (code === 'ArrowUp') {
+        this.keys.up = pressed;
+        this.analogY = 0;
+      }
+      if (code === 'ArrowDown') {
+        this.keys.down = pressed;
+        this.analogY = 0;
+      }
       if (code === 'Space') {
         if (pressed && !this.keys.jump) this.jumpPressedOnce = true;
         this.keys.jump = pressed;
@@ -273,6 +299,15 @@
           this.triggerStart();
         }
       }
+    }
+
+    setJoystickVector(nx, ny) {
+      this.analogX = nx;
+      this.analogY = ny;
+      this.keys.left = nx < -0.18;
+      this.keys.right = nx > 0.18;
+      this.keys.up = ny < -0.24;
+      this.keys.down = ny > 0.24;
     }
 
     toggleSoundUI() {
@@ -643,16 +678,21 @@
           p.vy = 0;
           p.x = lad.x - p.w / 2;
 
+          const climbMult =
+            Math.abs(this.analogY) > 0.05
+              ? Math.max(0.32, Math.min(1, (Math.abs(this.analogY) - 0.12) / 0.72))
+              : 1;
+
           if (this.keys.up) {
             // 끊어진 사다리(broken)는 상단으로 완주 불가
             const minTop = lad.broken ? lad.y1 + 22 : lad.y1 - p.h;
-            p.y = Math.max(minTop, p.y - CLIMB_SPEED);
-            p.animFrame += 0.16;
+            p.y = Math.max(minTop, p.y - CLIMB_SPEED * climbMult);
+            p.animFrame += 0.16 * climbMult;
             p.walkSoundTick++;
             if (p.walkSoundTick % 10 === 0) global.DKAudio.playClimb(p.walkSoundTick);
           } else if (this.keys.down) {
-            p.y = Math.min(lad.y2 - p.h, p.y + CLIMB_SPEED);
-            p.animFrame += 0.16;
+            p.y = Math.min(lad.y2 - p.h, p.y + CLIMB_SPEED * climbMult);
+            p.animFrame += 0.16 * climbMult;
             p.walkSoundTick++;
             if (p.walkSoundTick % 10 === 0) global.DKAudio.playClimb(p.walkSoundTick);
           }
@@ -746,19 +786,25 @@
       }
 
       // 3) 좌우 이동 및 점프 (무적 해머 사용 중에는 점프 불가 - 나무위키 고증!)
+      // 원형 아날로그 조이스틱을 살짝 기울이면 미세하고 정밀한 이동이 가능하며, 끝까지 밀면 최대 속도로 이동합니다.
+      const walkMult =
+        Math.abs(this.analogX) > 0.05
+          ? Math.max(0.28, Math.min(1, (Math.abs(this.analogX) - 0.1) / 0.72))
+          : 1;
+
       let moveVx = 0;
       if (this.keys.left) {
-        moveVx = -MOVE_SPEED;
+        moveVx = -MOVE_SPEED * walkMult;
         p.dir = -1;
       } else if (this.keys.right) {
-        moveVx = MOVE_SPEED;
+        moveVx = MOVE_SPEED * walkMult;
         p.dir = 1;
       }
 
       if (p.onGround) {
         p.vx = moveVx;
         if (moveVx !== 0) {
-          p.animFrame += 0.22;
+          p.animFrame += 0.22 * walkMult;
           p.walkSoundTick++;
           if (p.walkSoundTick % 9 === 0) {
             global.DKAudio.playWalk(Math.floor(p.walkSoundTick / 9));

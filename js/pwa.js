@@ -34,93 +34,179 @@
     });
   }
 
-  // 2. 모바일 멀티터치 & 슬라이드 드래그 가상 패드 바인딩
-  const VIRTUAL_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'];
-  const activeKeySet = new Set();
+  // 2. 모바일 360° 원형 아날로그 조이스틱 & 멀티터치 점프 버튼 바인딩
+  const joystickZone = document.getElementById('joystickZone');
+  const joystickBase = document.getElementById('joystickBase');
+  const joystickKnob = document.getElementById('joystickKnob');
+  const btnMobileJump = document.getElementById('btnMobileJump');
+  const joyDirLabels = {
+    up: document.querySelector('.joy-dir-up'),
+    down: document.querySelector('.joy-dir-down'),
+    left: document.querySelector('.joy-dir-left'),
+    right: document.querySelector('.joy-dir-right')
+  };
 
-  function syncVirtualKeys(nextKeySet) {
-    if (!window.DKGame) return;
+  let joyTouchId = null;
+  let joyMouseDown = false;
+  let jumpPressedState = false;
 
-    // 새로 눌린 키가 있으면 오디오 잠금 해제 및 짧은 진동 피드백
-    let newlyPressed = false;
-    nextKeySet.forEach((k) => {
-      if (!activeKeySet.has(k)) newlyPressed = true;
+  function applyJoystickClientPos(clientX, clientY) {
+    if (!joystickBase || !joystickKnob) return;
+    const rect = joystickBase.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxRadius = Math.max(28, rect.width * 0.31);
+
+    const dx = clientX - cx;
+    const dy = clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    const clampedDist = Math.min(dist, maxRadius);
+    const angle = Math.atan2(dy, dx);
+
+    const kx = clampedDist * Math.cos(angle);
+    const ky = clampedDist * Math.sin(angle);
+
+    // 썸스틱 노브를 손가락 위치로 부드럽게 이동
+    joystickKnob.style.transform = `translate(calc(-50% + ${kx.toFixed(1)}px), calc(-50% + ${ky.toFixed(1)}px))`;
+    joystickBase.classList.add('active');
+    joystickKnob.classList.add('active');
+
+    // 정규화된 벡터 (-1.0 ~ +1.0)
+    const nx = kx / maxRadius;
+    const ny = ky / maxRadius;
+
+    if (window.DKGame && typeof window.DKGame.setJoystickVector === 'function') {
+      window.DKGame.setJoystickVector(nx, ny);
+    }
+
+    // 원형 테두리 4방향 발광 인디케이터 업데이트 (대각선 이동 시 2개 동시 점등)
+    if (joyDirLabels.left) joyDirLabels.left.classList.toggle('lit', nx < -0.18);
+    if (joyDirLabels.right) joyDirLabels.right.classList.toggle('lit', nx > 0.18);
+    if (joyDirLabels.up) joyDirLabels.up.classList.toggle('lit', ny < -0.24);
+    if (joyDirLabels.down) joyDirLabels.down.classList.toggle('lit', ny > 0.24);
+  }
+
+  function resetJoystick() {
+    joyTouchId = null;
+    joyMouseDown = false;
+    if (joystickKnob) {
+      joystickKnob.style.transform = 'translate(-50%, -50%)';
+      joystickKnob.classList.remove('active');
+    }
+    if (joystickBase) {
+      joystickBase.classList.remove('active');
+    }
+    Object.values(joyDirLabels).forEach((el) => {
+      if (el) el.classList.remove('lit');
     });
+    if (window.DKGame && typeof window.DKGame.setJoystickVector === 'function') {
+      window.DKGame.setJoystickVector(0, 0);
+    }
+  }
 
-    if (newlyPressed) {
+  function setJumpPressed(pressed) {
+    if (pressed === jumpPressedState) return;
+    jumpPressedState = pressed;
+    if (btnMobileJump) {
+      btnMobileJump.classList.toggle('pressed', pressed);
+    }
+    if (pressed) {
       if (window.DKAudio) window.DKAudio.init();
       if (navigator.vibrate) {
         try {
-          navigator.vibrate(10);
+          navigator.vibrate(12);
         } catch (_) {}
       }
     }
-
-    // 모든 가상 키 상태 및 버튼 시각 효과 동기화
-    VIRTUAL_KEYS.forEach((code) => {
-      const isPressed = nextKeySet.has(code);
-      const wasPressed = activeKeySet.has(code);
-      if (isPressed !== wasPressed) {
-        window.DKGame.setVirtualKey(code, isPressed);
-      }
-    });
-
-    document.querySelectorAll('[data-key]').forEach((btn) => {
-      const code = btn.getAttribute('data-key');
-      btn.classList.toggle('pressed', nextKeySet.has(code));
-    });
-
-    activeKeySet.clear();
-    nextKeySet.forEach((k) => activeKeySet.add(k));
+    if (window.DKGame) {
+      window.DKGame.setVirtualKey('Space', pressed);
+    }
   }
 
-  function handleTouchUpdate(e) {
+  function handleTouchEvent(e) {
     if (!mobileControls) return;
     e.preventDefault();
 
-    const nextKeys = new Set();
-    for (let i = 0; i < e.touches.length; i++) {
-      const t = e.touches[i];
-      const el = document.elementFromPoint(t.clientX, t.clientY);
-      if (!el) continue;
-      const keyBtn = el.closest('[data-key]');
-      if (keyBtn) {
-        const code = keyBtn.getAttribute('data-key');
-        if (code) nextKeys.add(code);
+    // 1) 새로운 터치가 조이스틱 영역에서 시작되었는지 확인
+    if (joyTouchId === null) {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        const target = document.elementFromPoint(t.clientX, t.clientY) || t.target;
+        if (target && joystickZone && joystickZone.contains(target)) {
+          joyTouchId = t.identifier;
+          if (window.DKAudio) window.DKAudio.init();
+          if (navigator.vibrate) {
+            try {
+              navigator.vibrate(8);
+            } catch (_) {}
+          }
+          break;
+        }
       }
     }
-    syncVirtualKeys(nextKeys);
+
+    // 2) 현재 활성 터치 목록에서 조이스틱 터치와 점프 버튼 터치를 독립적으로 추적 (멀티터치 완벽 지원)
+    let activeJoyTouch = null;
+    let isJumpTouched = false;
+
+    for (let i = 0; i < e.touches.length; i++) {
+      const t = e.touches[i];
+      if (t.identifier === joyTouchId) {
+        activeJoyTouch = t;
+        continue;
+      }
+      const el = document.elementFromPoint(t.clientX, t.clientY) || t.target;
+      if (el && btnMobileJump && (el === btnMobileJump || btnMobileJump.contains(el))) {
+        isJumpTouched = true;
+      }
+    }
+
+    if (activeJoyTouch) {
+      applyJoystickClientPos(activeJoyTouch.clientX, activeJoyTouch.clientY);
+    } else if (joyTouchId !== null) {
+      resetJoystick();
+    }
+
+    setJumpPressed(isJumpTouched);
   }
 
   if (mobileControls) {
-    mobileControls.addEventListener('touchstart', handleTouchUpdate, { passive: false });
-    mobileControls.addEventListener('touchmove', handleTouchUpdate, { passive: false });
-    mobileControls.addEventListener('touchend', handleTouchUpdate, { passive: false });
-    mobileControls.addEventListener('touchcancel', handleTouchUpdate, { passive: false });
+    mobileControls.addEventListener('touchstart', handleTouchEvent, { passive: false });
+    mobileControls.addEventListener('touchmove', handleTouchEvent, { passive: false });
+    mobileControls.addEventListener('touchend', handleTouchEvent, { passive: false });
+    mobileControls.addEventListener('touchcancel', handleTouchEvent, { passive: false });
 
-    // PC 마우스로 가상 패드 클릭 테스트 지원
-    let mouseHeldKey = null;
-    document.querySelectorAll('[data-key]').forEach((btn) => {
-      const code = btn.getAttribute('data-key');
-      btn.addEventListener('mousedown', (e) => {
+    // PC 마우스로도 원형 조이스틱 드래그 및 점프 버튼 테스트 가능하도록 지원
+    if (joystickBase) {
+      joystickBase.addEventListener('mousedown', (e) => {
         e.preventDefault();
-        mouseHeldKey = code;
-        syncVirtualKeys(new Set([code]));
+        joyMouseDown = true;
+        if (window.DKAudio) window.DKAudio.init();
+        applyJoystickClientPos(e.clientX, e.clientY);
       });
-      btn.addEventListener('mouseenter', (e) => {
-        if (e.buttons === 1 && mouseHeldKey) {
-          mouseHeldKey = code;
-          syncVirtualKeys(new Set([code]));
-        }
-      });
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (joyMouseDown) {
+        applyJoystickClientPos(e.clientX, e.clientY);
+      }
     });
 
     window.addEventListener('mouseup', () => {
-      if (mouseHeldKey) {
-        mouseHeldKey = null;
-        syncVirtualKeys(new Set());
+      if (joyMouseDown) {
+        resetJoystick();
+      }
+      if (jumpPressedState) {
+        setJumpPressed(false);
       }
     });
+
+    if (btnMobileJump) {
+      btnMobileJump.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        setJumpPressed(true);
+      });
+    }
 
     // 게임 캔버스 터치 시 타이틀/게임오버 화면에서 즉시 게임 시작 지원
     const canvas = document.getElementById('gameCanvas');

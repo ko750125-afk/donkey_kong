@@ -2,7 +2,7 @@
  * Donkey Kong (1981) Arcade Clone — PWA Service Worker
  * 최신 배포 버전을 즉시 반영하면서도 오프라인 환경에서 완벽히 실행되도록 지원합니다.
  */
-const CACHE_NAME = 'dk1981-arcade-pwa-v4';
+const CACHE_NAME = 'dk1981-arcade-pwa-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
