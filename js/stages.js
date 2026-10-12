@@ -239,7 +239,7 @@
       // Tier 4 (최상단 동키콩 층)
       { id: 4, x1: 64, y1: 136, x2: 384, y2: 136, color: '#2858ff', tier: 4 },
       // Tier 5 (폴린 플랫폼)
-      { id: 5, x1: 176, y1: 88, x2: 272, y2: 88, color: '#ff55b8', tier: 5 }
+      { id: 5, x1: 172, y1: 88, x2: 276, y2: 88, color: '#ff55b8', tier: 5, isGoalPlatform: true }
     ];
 
     // 총 8개의 노란 철근 나사(리벳) — 좌측 열(x=136) 4개, 우측 열(x=312) 4개
@@ -270,7 +270,9 @@
       { x: 376, y1: 220, y2: 306, broken: false },
       // Tier 3 -> 4
       { x: 76, y1: 136, y2: 220, broken: false },
-      { x: 364, y1: 136, y2: 220, broken: false }
+      { x: 364, y1: 136, y2: 220, broken: false },
+      // Tier 4 -> 5 (폴린 구출 사다리)
+      { x: 262, y1: 88, y2: 136, broken: false, isGoalLadder: true }
     ];
 
     const items = [
@@ -286,8 +288,8 @@
       heightLabel: '100m',
       title: 'STAGE 4 - 100m (RIVETS)',
       playerSpawn: { x: 60, y: 452 },
-      dkSpawn: { x: 196, y: 92 },
-      paulineSpawn: { x: 214, y: 62 },
+      dkSpawn: { x: 174, y: 92 },
+      paulineSpawn: { x: 196, y: 62 },
       girders,
       ladders,
       items,

@@ -604,7 +604,11 @@
           // 폴린 구출 사다리 완주 시: 열쇠로 쇠창살을 연 상태에서만 구출 가능!
           if (lad.isGoalLadder) {
             if (this.pauline.cageUnlocked) {
-              this.triggerStageClear();
+              if (this.stageNum === 4) {
+                this.triggerLevelComplete();
+              } else {
+                this.triggerStageClear();
+              }
               return;
             } else {
               if (!this.pauline.needKeyWarnTimer) {
@@ -771,9 +775,13 @@
         }
 
         // 폴린 플랫폼 도달 시: 열쇠로 쇠창살이 열렸을 때만 구출(클리어), 아니면 쇠창살 앞에서 가로막힘!
-        if (landedSurface.isGoalPlatform && this.stageNum !== 4) {
+        if (landedSurface.isGoalPlatform) {
           if (this.pauline.cageUnlocked) {
-            this.triggerStageClear();
+            if (this.stageNum === 4) {
+              this.triggerLevelComplete();
+            } else {
+              this.triggerStageClear();
+            }
             return;
           } else {
             if (p.x < 234) {
@@ -789,6 +797,23 @@
         if (p.onGround) {
           p.onGround = false;
           p.fallStartY = p.y;
+        }
+      }
+
+      // 폴린 본체 주변 직접 도달 시에도 열쇠를 먹은 상태라면 즉시 구출 성공 처리!
+      if (this.rectsOverlap(p.x, p.y, p.w, p.h, this.pauline.x - 10, this.pauline.y - 6, 38, 36)) {
+        if (this.pauline.cageUnlocked) {
+          if (this.stageNum === 4) {
+            this.triggerLevelComplete();
+          } else {
+            this.triggerStageClear();
+          }
+          return;
+        } else {
+          if (!this.pauline.needKeyWarnTimer) {
+            global.DKAudio.playLockedWarning();
+          }
+          this.pauline.needKeyWarnTimer = 75;
         }
       }
 
