@@ -735,6 +735,87 @@
         ctx.stroke();
       }
       ctx.restore();
+    },
+
+    /**
+     * 100m(4스테이지) 다리 연결 볼트(리벳) 및 다리 상판이 아래로 열리는 개폐 모션 렌더링
+     */
+    drawBridgeRivet(ctx, r, tick = 0) {
+      ctx.save();
+      const x = Math.round(r.x);
+      const y = Math.round(r.y);
+
+      if (!r.pulled) {
+        // 1) 밟기 전: 좌우 철골을 맞물려 이어주는 개폐식 다리 상판(좌/우 플랩)
+        ctx.fillStyle = '#00d8ff';
+        ctx.fillRect(x - 10, y, 9, 4);
+        ctx.fillRect(x + 1, y, 9, 4);
+
+        ctx.fillStyle = '#0078a8';
+        ctx.fillRect(x - 10, y + 4, 9, 5);
+        ctx.fillRect(x + 1, y + 4, 9, 5);
+
+        // 양 끝 경첩(힌지) 핀
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 10, y + 1, 2, 2);
+        ctx.fillRect(x + 8, y + 1, 2, 2);
+
+        // 중앙을 고정하고 있는 T자형 황금 연결 나사(볼트)
+        const pulse = Math.floor(tick / 12) % 2 === 0;
+        ctx.fillStyle = pulse ? '#ffee00' : '#ffb800';
+        ctx.fillRect(x - 4, y - 2, 8, 3); // 볼트 머리(납작하게 바닥과 밀착되어 장애물처럼 보이지 않음)
+        ctx.fillStyle = '#ff9900';
+        ctx.fillRect(x - 2, y + 1, 4, 8); // 볼트 기둥
+
+        // 밟으면 작동한다는 작은 하이라이트 점
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 2, y - 1, 4, 1);
+      } else {
+        // 2) 밟은 후: 중앙 철골이 끊어지고 좌우 다리 상판이 아래로 덜컥 열리는 모션!
+        const prog = r.openProgress !== undefined ? r.openProgress : 1;
+
+        // 먼저 철골 트러스 위에 열린 구멍(검은색 공간)을 깨끗이 비움
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x - 10, y - 2, 20, 13);
+
+        // 최초 1회 밟고 지나가는 동안(safePassActive) 발밑을 받쳐주는 잔상 에너지 가교 표시
+        if (r.safePassActive) {
+          ctx.fillStyle = 'rgba(0, 255, 255, 0.55)';
+          ctx.fillRect(x - 9, y, 18, 2);
+        }
+
+        // 좌/우 다리 상판이 경첩(x-10, x+10)을 축으로 아래로 회전하며 열림 (최대 약 78도)
+        const maxAngle = Math.PI * 0.43;
+        const angle = prog * maxAngle;
+
+        // 왼쪽 다리 문짝 (아래로 회전)
+        ctx.save();
+        ctx.translate(x - 10, y + 2);
+        ctx.rotate(angle);
+        ctx.fillStyle = '#00d8ff';
+        ctx.fillRect(0, -2, 9, 3);
+        ctx.fillStyle = '#ff8800';
+        ctx.fillRect(0, 1, 9, 3);
+        ctx.restore();
+
+        // 오른쪽 다리 문짝 (아래로 회전)
+        ctx.save();
+        ctx.translate(x + 10, y + 2);
+        ctx.rotate(-angle);
+        ctx.fillStyle = '#00d8ff';
+        ctx.fillRect(-9, -2, 9, 3);
+        ctx.fillStyle = '#ff8800';
+        ctx.fillRect(-9, 1, 9, 3);
+        ctx.restore();
+
+        // 열린 다리 양 끝단 경첩 및 낙하 주의 표시(빨간 경고등)
+        const warnBlink = Math.floor(tick / 10) % 2 === 0;
+        ctx.fillStyle = warnBlink ? '#ff2244' : '#ffcc00';
+        ctx.fillRect(x - 11, y, 2, 4);
+        ctx.fillRect(x + 9, y, 2, 4);
+      }
+
+      ctx.restore();
     }
   };
 

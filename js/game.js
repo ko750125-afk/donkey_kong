@@ -714,8 +714,9 @@
         // 일반 철골 검사
         for (const g of this.stage.girders) {
           if (pxCenter >= g.x1 - 4 && pxCenter <= g.x2 + 4) {
-            // 100m 스테이지: 뽑힌 나사(리벳) 위치에는 빈틈(구멍)이 생겨 점프 없이 지나가면 아래로 빠짐!
-            if (this.stageNum === 4 && this.isInsidePulledRivetGap(g.id, pxCenter)) {
+            // 100m 스테이지: 이미 열린 다리(리벳) 위치에는 빈틈이 생겨 다음번부터는 점프 없이 지나가면 아래로 빠짐!
+            // (단, 최초 1회 밟아서 다리가 열리는 중인 safePassActive 상태에서는 절대 떨어지지 않음)
+            if (this.stageNum === 4 && this.isInsidePulledRivetGap(g.id, pxCenter, true)) {
               continue;
             }
             const gy = global.DKStages.getGirderYAtX(g, pxCenter);
@@ -818,9 +819,12 @@
       }
     }
 
-    isInsidePulledRivetGap(girderId, x) {
+    isInsidePulledRivetGap(girderId, x, isPlayer = false) {
       for (const r of this.stage.rivets) {
         if (r.pulled && r.girderId === girderId && Math.abs(x - r.x) < 7) {
+          if (isPlayer && r.safePassActive) {
+            return false;
+          }
           return true;
         }
       }
@@ -1341,7 +1345,7 @@
         }
       }
 
-      // 2) 100m 스테이지 노란 철근 나사(리벳) 8개 뽑기 판정 (열쇠도 함께 먹어야 최종 구출 완료!)
+      // 2) 100m 스테이지 다리 연결 볼트(리벳) 8개 개폐 판정 (최초 1회 밟을 때는 추락하지 않고 다리만 열림!)
       if (this.stageNum === 4) {
         const pxCenter = p.x + p.w / 2;
         const pyFoot = p.y + p.h;
@@ -1349,10 +1353,23 @@
         let remaining = 0;
         for (const r of this.stage.rivets) {
           if (!r.pulled) {
-            if (Math.abs(pxCenter - r.x) <= 8 && pyFoot <= r.y + 8 && pyFoot >= r.y - 26) {
+            if (Math.abs(pxCenter - r.x) <= 9 && pyFoot <= r.y + 8 && pyFoot >= r.y - 26) {
               r.pulled = true;
+              r.safePassActive = true; // 최초 1회 밟고 지나가는 동안은 추락 방지 보장!
+              r.openProgress = 0;
               this.addScore(100, r.x - 6, r.y - 12);
+              this.addSmashSparks(r.x, r.y + 2);
               global.DKAudio.playRivetPull();
+            }
+          } else {
+            // 다리 상판이 아래로 열리는 애니메이션 진행
+            if (r.openProgress === undefined) r.openProgress = 1;
+            if (r.openProgress < 1) {
+              r.openProgress = Math.min(1, r.openProgress + 0.05);
+            }
+            // 플레이어가 해당 다리 구역을 완전히 벗어나면 안전 통과 보호 해제 -> 다음번부터는 점프해야만 통과 가능!
+            if (r.safePassActive && (Math.abs(pxCenter - r.x) > 18 || Math.abs(pyFoot - r.y) > 30)) {
+              r.safePassActive = false;
             }
           }
           if (!r.pulled) remaining++;
@@ -1614,19 +1631,10 @@
         this.drawGirderSegment(ctx, g.x1, g.y1, g.x2, g.y2, g.color, g.conveyor || 0);
       });
 
-      // 4) 100m 노란 철근 나사(리벳) 8개 및 뽑힌 빈틈 렌더링
+      // 4) 100m 다리 연결 볼트(리벳) 8개 및 다리 개폐 모션 렌더링
       if (this.stageNum === 4) {
         this.stage.rivets.forEach((r) => {
-          if (r.pulled) {
-            // 나사가 뽑힌 자리는 검은 빈틈(구멍)으로 표시
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(r.x - 8, r.y - 1, 16, 12);
-          } else {
-            ctx.fillStyle = '#ffff00';
-            ctx.fillRect(r.x - 5, r.y - 2, 10, 11);
-            ctx.fillStyle = '#ff8800';
-            ctx.fillRect(r.x - 3, r.y, 6, 3);
-          }
+          global.DKSprites.drawBridgeRivet(ctx, r, this.tick);
         });
       }
 
