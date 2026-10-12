@@ -1,42 +1,60 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
-  <!-- Background -->
-  <rect width="64" height="64" rx="10" fill="#07070c"/>
-  <!-- Red Arcade Girder Top & Bottom -->
-  <rect x="4" y="6" width="56" height="4" fill="#e60012"/>
-  <rect x="4" y="54" width="56" height="4" fill="#e60012"/>
-  <rect x="8" y="8" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="20" y="8" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="32" y="8" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="44" y="8" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="8" y="55" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="20" y="55" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="32" y="55" width="4" height="2" fill="#ff9eb5"/>
-  <rect x="44" y="55" width="4" height="2" fill="#ff9eb5"/>
+  <!-- 딥 아케이드 네이비 블랙 배경 -->
+  <rect width="64" height="64" rx="12" fill="#050711"/>
+  <!-- 골드 & 시안 네온 이중 보더 -->
+  <rect x="3" y="3" width="58" height="58" rx="10" fill="none" stroke="#ffb800" stroke-width="2"/>
+  <rect x="6" y="6" width="52" height="52" rx="8" fill="none" stroke="#00e8ff" stroke-width="2"/>
 
-  <!-- Classic Donkey Kong Pixel Art Silhouette -->
-  <!-- Head & Ears -->
-  <rect x="24" y="12" width="16" height="4" fill="#a84400"/>
-  <rect x="20" y="16" width="24" height="10" fill="#a84400"/>
-  <rect x="16" y="18" width="4" height="6" fill="#f8b878"/>
-  <rect x="44" y="18" width="4" height="6" fill="#f8b878"/>
-  <!-- Face & Grin -->
-  <rect x="24" y="18" width="16" height="8" fill="#f8b878"/>
-  <rect x="26" y="19" width="3" height="3" fill="#000000"/>
-  <rect x="35" y="19" width="3" height="3" fill="#000000"/>
-  <rect x="25" y="23" width="14" height="2" fill="#ffffff"/>
-  <!-- Torso & Arms -->
-  <rect x="14" y="26" width="36" height="14" fill="#a84400"/>
-  <rect x="24" y="28" width="16" height="10" fill="#f8b878"/>
-  <!-- Hands holding Barrel -->
-  <rect x="10" y="30" width="6" height="10" fill="#a84400"/>
-  <rect x="48" y="30" width="6" height="10" fill="#a84400"/>
-  <!-- Legs -->
-  <rect x="18" y="40" width="8" height="10" fill="#a84400"/>
-  <rect x="38" y="40" width="8" height="10" fill="#a84400"/>
-  <rect x="16" y="48" width="10" height="4" fill="#f8b878"/>
-  <rect x="38" y="48" width="10" height="4" fill="#f8b878"/>
-  <!-- Classic Barrel in Center Bottom -->
-  <rect x="27" y="41" width="10" height="10" fill="#e46800"/>
-  <rect x="27" y="43" width="10" height="2" fill="#00d8ff"/>
-  <rect x="27" y="47" width="10" height="2" fill="#00d8ff"/>
+  <!-- 상단 나무통 (동키콩이 머리 위로 번쩍 든 통) -->
+  <rect x="22" y="10" width="20" height="10" fill="#e46800"/>
+  <rect x="24" y="9" width="16" height="12" fill="#f57c00"/>
+  <rect x="26" y="9" width="2" height="12" fill="#1838d8"/>
+  <rect x="36" y="9" width="2" height="12" fill="#1838d8"/>
+  <rect x="28" y="13" width="8" height="4" fill="#ffb74d"/>
+
+  <!-- 동키콩 양팔 (만세 포즈로 통을 들고 있음) -->
+  <rect x="17" y="16" width="6" height="10" fill="#9c3d00"/>
+  <rect x="41" y="16" width="6" height="10" fill="#9c3d00"/>
+  <rect x="20" y="13" width="3" height="4" fill="#f8b878"/>
+  <rect x="41" y="13" width="3" height="4" fill="#f8b878"/>
+
+  <!-- 동키콩 머리 & 특유의 웃는 입 -->
+  <rect x="25" y="21" width="14" height="10" fill="#9c3d00"/>
+  <rect x="26" y="23" width="12" height="7" fill="#f8b878"/>
+  <rect x="28" y="24" width="2" height="2" fill="#000000"/>
+  <rect x="34" y="24" width="2" height="2" fill="#000000"/>
+  <rect x="27" y="27" width="10" height="2" fill="#ffffff"/>
+
+  <!-- 동키콩 몸통 & 가슴팍 -->
+  <rect x="22" y="30" width="20" height="9" fill="#9c3d00"/>
+  <rect x="26" y="31" width="12" height="7" fill="#f8b878"/>
+
+  <!-- 동키콩 다리 & 발 -->
+  <rect x="21" y="38" width="6" height="5" fill="#9c3d00"/>
+  <rect x="37" y="38" width="6" height="5" fill="#9c3d00"/>
+  <rect x="20" y="42" width="7" height="2" fill="#f8b878"/>
+  <rect x="37" y="42" width="7" height="2" fill="#f8b878"/>
+
+  <!-- 붉은 철골 트러스 (Girder) -->
+  <rect x="7" y="44" width="50" height="2" fill="#ff1e56"/>
+  <rect x="7" y="49" width="50" height="2" fill="#ff1e56"/>
+  <rect x="10" y="46" width="3" height="3" fill="#ff8ba7"/>
+  <rect x="18" y="46" width="3" height="3" fill="#ff8ba7"/>
+  <rect x="26" y="46" width="3" height="3" fill="#ff8ba7"/>
+  <rect x="34" y="46" width="3" height="3" fill="#ff8ba7"/>
+  <rect x="42" y="46" width="3" height="3" fill="#ff8ba7"/>
+  <rect x="50" y="46" width="3" height="3" fill="#ff8ba7"/>
+
+  <!-- 하단 황금 열쇠 (Golden Key) -->
+  <rect x="22" y="52" width="5" height="5" fill="#ffd000"/>
+  <rect x="23" y="53" width="3" height="3" fill="#050711"/>
+  <rect x="27" y="53" width="8" height="2" fill="#ffd000"/>
+  <rect x="31" y="55" width="1" height="2" fill="#ffd000"/>
+  <rect x="33" y="55" width="2" height="2" fill="#ffd000"/>
+
+  <!-- 하단 하늘색 사다리 -->
+  <rect x="40" y="51" width="2" height="7" fill="#00e8ff"/>
+  <rect x="46" y="51" width="2" height="7" fill="#00e8ff"/>
+  <rect x="40" y="53" width="8" height="1" fill="#00e8ff"/>
+  <rect x="40" y="56" width="8" height="1" fill="#00e8ff"/>
 </svg>
