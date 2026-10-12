@@ -40,10 +40,10 @@
   const joystickKnob = document.getElementById('joystickKnob');
   const btnMobileJump = document.getElementById('btnMobileJump');
   const joyDirLabels = {
-    up: document.querySelector('.joy-dir-up'),
-    down: document.querySelector('.joy-dir-down'),
-    left: document.querySelector('.joy-dir-left'),
-    right: document.querySelector('.joy-dir-right')
+    up: document.querySelector('.joy-dir[data-dir="up"]'),
+    down: document.querySelector('.joy-dir[data-dir="down"]'),
+    left: document.querySelector('.joy-dir[data-dir="left"]'),
+    right: document.querySelector('.joy-dir[data-dir="right"]')
   };
 
   let joyTouchId = null;
@@ -66,8 +66,8 @@
     const kx = clampedDist * Math.cos(angle);
     const ky = clampedDist * Math.sin(angle);
 
-    // 썸스틱 노브를 손가락 위치로 부드럽게 이동
-    joystickKnob.style.transform = `translate(calc(-50% + ${kx.toFixed(1)}px), calc(-50% + ${ky.toFixed(1)}px))`;
+    // #joystickKnob은 flexbox로 이미 정중앙(0,0)에 정렬되어 있으므로 순수 변위(kx, ky)만 적용
+    joystickKnob.style.transform = `translate3d(${kx.toFixed(1)}px, ${ky.toFixed(1)}px, 0)`;
     joystickBase.classList.add('active');
     joystickKnob.classList.add('active');
 
@@ -90,7 +90,7 @@
     joyTouchId = null;
     joyMouseDown = false;
     if (joystickKnob) {
-      joystickKnob.style.transform = 'translate(-50%, -50%)';
+      joystickKnob.style.transform = 'translate3d(0px, 0px, 0)';
       joystickKnob.classList.remove('active');
     }
     if (joystickBase) {
