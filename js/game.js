@@ -464,6 +464,43 @@
       }
 
       if (this.state === 'STAGE_CLEAR') {
+        this.updateEffects();
+
+        // 1단계(175~126): 점프맨과 폴린 사이에 하트가 뜨고, 동키콩이 폴린 쪽(x=148)으로 성큼성큼 다가옴!
+        const escapeClimbX = 148;
+        if (this.stateTimer > 125) {
+          if (Math.abs(this.dk.x - escapeClimbX) > 2.4) {
+            this.dk.x += Math.sign(escapeClimbX - this.dk.x) * 2.4;
+            this.dk.pose = Math.floor(this.tick / 6) % 2 === 0 ? 'left' : 'right';
+          } else {
+            this.dk.x = escapeClimbX;
+            this.dk.pose = 'roar';
+          }
+          if (this.dk.y > 70) {
+            this.dk.y = Math.max(70, this.dk.y - 1.5);
+          }
+        }
+        // 2단계(125): 동키콩이 폴린을 낚아채 옆구리에 끼고 하트가 두 조각으로 깨짐!
+        else if (this.stateTimer === 125) {
+          this.dk.x = escapeClimbX;
+          this.dk.y = 70;
+          this.dk.grabbedPauline = true;
+          this.dk.escaping = true;
+          this.dk.pose = 'climb';
+          this.pauline.grabbedByKong = true;
+          global.DKAudio.playSpringBounce(true);
+        }
+        // 3단계(124~1): 동키콩이 폴린을 데리고 상단 사다리를 타고 더 높은 곳(다음 스테이지)으로 도망감!
+        else {
+          this.dk.pose = 'climb';
+          this.dk.y -= 1.55;
+          this.pauline.x = this.dk.x + 38;
+          this.pauline.y = this.dk.y + 8;
+          if (this.stateTimer % 10 === 0 && this.dk.y > -24) {
+            global.DKAudio.playClimb(this.stateTimer);
+          }
+        }
+
         this.stateTimer--;
         if (this.stateTimer <= 0) {
           const nextStage = (this.stageNum % 4) + 1;
@@ -1476,7 +1513,32 @@
 
     triggerStageClear() {
       this.state = 'STAGE_CLEAR';
-      this.stateTimer = 140;
+      this.stateTimer = 175;
+      this.barrels = [];
+      this.fireballs = [];
+      this.cementPans = [];
+      this.springs = [];
+
+      // 점프맨과 폴린 최상단 단상 재회 위치 정렬
+      this.player.climbing = false;
+      this.player.currentLadder = null;
+      this.player.vx = 0;
+      this.player.vy = 0;
+      this.player.x = 248;
+      this.player.y = 64;
+      this.player.dir = -1;
+      this.player.hammerTimer = 0;
+
+      this.pauline.x = 194;
+      this.pauline.y = 62;
+      this.pauline.rescued = true;
+      this.pauline.grabbedByKong = false;
+
+      // 동키콩 도주 연출 초기화
+      this.dk.escaping = false;
+      this.dk.grabbedPauline = false;
+      this.dk.pose = 'roar';
+
       this.addScore(this.bonus, 200, 120);
       global.DKAudio.playStageClear();
     }
@@ -1552,8 +1614,14 @@
 
       // 스테이지 클리어 / 100m 완료 하트 연출
       if (this.state === 'STAGE_CLEAR') {
-        const broken = this.stateTimer < 75;
-        global.DKSprites.drawHeart(ctx, 216, 56, broken);
+        const broken = this.stateTimer <= 125;
+        global.DKSprites.drawHeart(ctx, 222, 52, broken);
+        if (broken) {
+          ctx.fillStyle = '#ffff00';
+          ctx.font = 'bold 9px "Press Start 2P", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('KONG ESCAPES TO NEXT STAGE!', CANVAS_W / 2, 168);
+        }
       } else if (this.state === 'LEVEL_COMPLETE') {
         global.DKSprites.drawHeart(ctx, 216, 94, false);
         ctx.fillStyle = '#00ffff';
@@ -1665,6 +1733,19 @@
           ctx.stroke();
         });
         ctx.setLineDash([]);
+      }
+
+      // 1-2) 1~3스테이지 상단 동키콩 도주용 연결 사다리 2줄 (다음 스테이지로 올라가는 통로)
+      if (this.stageNum < 4) {
+        ctx.fillStyle = '#0098c8';
+        [160, 188].forEach((ex) => {
+          const lx = ex - 6;
+          ctx.fillRect(lx, 46, 2, 90);
+          ctx.fillRect(lx + 10, 46, 2, 90);
+          for (let ry = 50; ry < 134; ry += 7) {
+            ctx.fillRect(lx, ry, 12, 2);
+          }
+        });
       }
 
       // 2) 사다리(Ladders) 렌더링

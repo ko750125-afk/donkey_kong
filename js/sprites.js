@@ -221,10 +221,18 @@
       ctx.fillStyle = FUR;
       ctx.fillRect(ox + 27, oy + 18, 2, 11);
 
-      // 팔 동작 (state: 'idle' | 'roar' | 'left' | 'right' | 'hold')
+      // 팔 동작 (state: 'idle' | 'roar' | 'left' | 'right' | 'hold' | 'climb')
       const beat = Math.floor(tick / 12) % 2;
+      const climbStep = Math.floor(tick / 6) % 2;
       ctx.fillStyle = FUR;
-      if (dk.pose === 'roar') {
+      if (dk.pose === 'climb') {
+        // 사다리를 타고 위층(다음 스테이지)으로 도망가는 등반 포즈!
+        ctx.fillRect(ox + 2, oy + (climbStep ? 2 : 12), 10, 14);
+        ctx.fillRect(ox + 44, oy + 12, 12, 12); // 오른팔로 폴린을 옆구리에 감싸 안음
+        ctx.fillStyle = SKIN;
+        ctx.fillRect(ox + 2, oy + (climbStep ? 0 : 24), 8, 4);
+        ctx.fillRect(ox + 46, oy + 22, 8, 4);
+      } else if (dk.pose === 'roar') {
         // 가슴 치며 포효
         ctx.fillRect(ox + 2, oy + (beat ? 6 : 14), 10, 14);
         ctx.fillRect(ox + 44, oy + (beat ? 14 : 6), 10, 14);
@@ -245,13 +253,15 @@
         ctx.fillRect(ox + 45, oy + 28, 8, 4);
       }
 
-      // 다리 & 발
+      // 다리 & 발 (등반 중일 때는 양다리가 번갈아 오르내림)
+      const leftLegLift = dk.pose === 'climb' ? (climbStep ? -4 : 2) : 0;
+      const rightLegLift = dk.pose === 'climb' ? (climbStep ? 2 : -4) : 0;
       ctx.fillStyle = FUR;
-      ctx.fillRect(ox + 12, oy + 34, 10, 8);
-      ctx.fillRect(ox + 34, oy + 34, 10, 8);
+      ctx.fillRect(ox + 12, oy + 34 + leftLegLift, 10, 8);
+      ctx.fillRect(ox + 34, oy + 34 + rightLegLift, 10, 8);
       ctx.fillStyle = SKIN;
-      ctx.fillRect(ox + 8, oy + 40, 12, 4);
-      ctx.fillRect(ox + 36, oy + 40, 12, 4);
+      ctx.fillRect(ox + 8, oy + 40 + leftLegLift, 12, 4);
+      ctx.fillRect(ox + 36, oy + 40 + rightLegLift, 12, 4);
 
       // 통을 들고 있는 포즈일 때 통 그리기
       if (dk.pose === 'hold') {
@@ -349,8 +359,12 @@
         ctx.globalAlpha = 1;
       }
 
-      // 상태 말풍선 (열쇠 없이 접근 시 NEED KEY! 강조, 평소엔 HELP!)
-      if (!pauline.rescued) {
+      // 상태 말풍선 (동키콩에게 다시 붙잡혀 올라갈 때 HELP!, 열쇠 없이 접근 시 NEED KEY!, 평소엔 HELP!/FREE!)
+      if (pauline.grabbedByKong) {
+        ctx.font = 'bold 9px "Press Start 2P", monospace';
+        ctx.fillStyle = Math.floor(tick / 6) % 2 === 0 ? '#ff2266' : '#ffff00';
+        ctx.fillText('HELP!', x + 22, y + 6);
+      } else if (!pauline.rescued) {
         ctx.font = 'bold 9px "Press Start 2P", monospace';
         if (pauline.needKeyWarnTimer && pauline.needKeyWarnTimer > 0) {
           ctx.fillStyle = Math.floor(tick / 6) % 2 === 0 ? '#ffff00' : '#ff2244';
