@@ -572,90 +572,137 @@
       const p = this.player;
       const hasHammer = p.hammerTimer > 0;
 
+      if (p.ladderJumpCooldown && p.ladderJumpCooldown > 0) {
+        p.ladderJumpCooldown--;
+      }
+
       // 1) 사다리 탑승 중일 때 (해머 보유 중에는 사다리 이용 불가!)
       if (p.climbing && p.currentLadder) {
         const lad = p.currentLadder;
-        p.vx = 0;
-        p.vy = 0;
-        p.x = lad.x - p.w / 2;
 
-        if (this.keys.up) {
-          // 끊어진 사다리(broken)는 상단으로 완주 불가
-          const minTop = lad.broken ? lad.y1 + 22 : lad.y1 - p.h;
-          p.y = Math.max(minTop, p.y - CLIMB_SPEED);
-          p.animFrame += 0.16;
-          p.walkSoundTick++;
-          if (p.walkSoundTick % 10 === 0) global.DKAudio.playClimb(p.walkSoundTick);
-        } else if (this.keys.down) {
-          p.y = Math.min(lad.y2 - p.h, p.y + CLIMB_SPEED);
-          p.animFrame += 0.16;
-          p.walkSoundTick++;
-          if (p.walkSoundTick % 10 === 0) global.DKAudio.playClimb(p.walkSoundTick);
-        }
-
-        // 사다리 상단 도달 판정
-        if (!lad.broken && p.y <= lad.y1 - p.h + 1) {
-          p.y = lad.y1 - p.h;
+        // 사다리 도중 점프 키를 누르면 사다리에서 즉시 점프로 이탈하여 이동 가능!
+        if (this.jumpPressedOnce && !hasHammer) {
           p.climbing = false;
           p.currentLadder = null;
-          p.onGround = true;
+          p.onGround = false;
+          p.vy = JUMP_VEL;
+          if (this.keys.left) {
+            p.vx = -MOVE_SPEED;
+            p.dir = -1;
+          } else if (this.keys.right) {
+            p.vx = MOVE_SPEED;
+            p.dir = 1;
+          } else {
+            p.vx = 0;
+          }
           p.fallStartY = p.y;
+          p.ladderJumpCooldown = 12; // 점프 직후 같은 사다리에 즉시 재흡착 방지
+          p.jumpScoredIds.clear();
+          p.jumpScoreCount = 0;
+          this.jumpPressedOnce = false;
+          global.DKAudio.playJump();
+        } else {
+          p.vx = 0;
+          p.vy = 0;
+          p.x = lad.x - p.w / 2;
 
-          // 폴린 구출 사다리 완주 시: 열쇠로 쇠창살을 연 상태에서만 구출 가능!
-          if (lad.isGoalLadder) {
-            if (this.pauline.cageUnlocked) {
-              if (this.stageNum === 4) {
-                this.triggerLevelComplete();
+          if (this.keys.up) {
+            // 끊어진 사다리(broken)는 상단으로 완주 불가
+            const minTop = lad.broken ? lad.y1 + 22 : lad.y1 - p.h;
+            p.y = Math.max(minTop, p.y - CLIMB_SPEED);
+            p.animFrame += 0.16;
+            p.walkSoundTick++;
+            if (p.walkSoundTick % 10 === 0) global.DKAudio.playClimb(p.walkSoundTick);
+          } else if (this.keys.down) {
+            p.y = Math.min(lad.y2 - p.h, p.y + CLIMB_SPEED);
+            p.animFrame += 0.16;
+            p.walkSoundTick++;
+            if (p.walkSoundTick % 10 === 0) global.DKAudio.playClimb(p.walkSoundTick);
+          }
+
+          // 사다리 상단 도달 판정
+          if (!lad.broken && p.y <= lad.y1 - p.h + 1) {
+            p.y = lad.y1 - p.h;
+            p.climbing = false;
+            p.currentLadder = null;
+            p.onGround = true;
+            p.fallStartY = p.y;
+
+            // 폴린 구출 사다리 완주 시: 열쇠로 쇠창살을 연 상태에서만 구출 가능!
+            if (lad.isGoalLadder) {
+              if (this.pauline.cageUnlocked) {
+                if (this.stageNum === 4) {
+                  this.triggerLevelComplete();
+                } else {
+                  this.triggerStageClear();
+                }
+                return;
               } else {
-                this.triggerStageClear();
+                if (!this.pauline.needKeyWarnTimer) {
+                  global.DKAudio.playLockedWarning();
+                }
+                this.pauline.needKeyWarnTimer = 75;
               }
-              return;
-            } else {
-              if (!this.pauline.needKeyWarnTimer) {
-                global.DKAudio.playLockedWarning();
-              }
-              this.pauline.needKeyWarnTimer = 75;
             }
           }
-        }
-        // 사다리 하단 도달 판정
-        else if (p.y >= lad.y2 - p.h - 1 && this.keys.down) {
-          p.y = lad.y2 - p.h;
-          p.climbing = false;
-          p.currentLadder = null;
-          p.onGround = true;
-          p.fallStartY = p.y;
-        }
+          // 사다리 하단 도달 판정
+          else if (p.y >= lad.y2 - p.h - 1 && this.keys.down) {
+            p.y = lad.y2 - p.h;
+            p.climbing = false;
+            p.currentLadder = null;
+            p.onGround = true;
+            p.fallStartY = p.y;
+          }
 
-        this.jumpPressedOnce = false;
-        return;
+          this.jumpPressedOnce = false;
+          return;
+        }
       }
 
-      // 2) 지상에서 사다리 진입 체크 (무적 해머 사용 중에는 사다리 불가 - 나무위키 고증!)
-      if (!hasHammer && p.onGround && (this.keys.up || this.keys.down)) {
+      // 2) 지상 및 점프(공중) 상태에서 사다리 진입/중간 올라타기 체크 (해머 사용 중 제외)
+      if (!hasHammer && (!p.ladderJumpCooldown || p.ladderJumpCooldown <= 0) && (this.keys.up || this.keys.down)) {
         const pxCenter = p.x + p.w / 2;
         const pyFoot = p.y + p.h;
 
         for (const lad of this.stage.ladders) {
           if (lad.decorative) continue;
-          if (Math.abs(pxCenter - lad.x) <= 10) {
-            // 위로 올라가기 시작
-            if (this.keys.up && Math.abs(pyFoot - lad.y2) <= 10) {
-              p.climbing = true;
-              p.currentLadder = lad;
-              p.x = lad.x - p.w / 2;
-              p.y = lad.y2 - p.h - 2;
-              this.jumpPressedOnce = false;
-              return;
-            }
-            // 아래로 내려가기 시작 (끊어진 사다리는 위에서 내려갈 수 없음)
-            if (this.keys.down && !lad.broken && Math.abs(pyFoot - lad.y1) <= 10) {
-              p.climbing = true;
-              p.currentLadder = lad;
-              p.x = lad.x - p.w / 2;
-              p.y = lad.y1 - p.h + 4;
-              this.jumpPressedOnce = false;
-              return;
+          if (Math.abs(pxCenter - lad.x) <= 12) {
+            if (p.onGround) {
+              // 지상에서 위로 올라가기 시작
+              if (this.keys.up && Math.abs(pyFoot - lad.y2) <= 10) {
+                p.climbing = true;
+                p.currentLadder = lad;
+                p.x = lad.x - p.w / 2;
+                p.y = lad.y2 - p.h - 2;
+                this.jumpPressedOnce = false;
+                return;
+              }
+              // 지상에서 아래로 내려가기 시작 (끊어진 사다리는 위에서 내려갈 수 없음)
+              if (this.keys.down && !lad.broken && Math.abs(pyFoot - lad.y1) <= 10) {
+                p.climbing = true;
+                p.currentLadder = lad;
+                p.x = lad.x - p.w / 2;
+                p.y = lad.y1 - p.h + 4;
+                this.jumpPressedOnce = false;
+                return;
+              }
+            } else {
+              // 공중(점프 중)에서 사다리 중간에 올라타기!
+              const minClimbY = lad.broken ? lad.y1 + 22 : lad.y1 - p.h + 2;
+              const maxClimbY = lad.y2 - p.h;
+              if (p.y >= minClimbY - 6 && p.y <= maxClimbY + 6) {
+                p.climbing = true;
+                p.currentLadder = lad;
+                p.x = lad.x - p.w / 2;
+                p.y = Math.max(minClimbY, Math.min(maxClimbY, p.y));
+                p.vx = 0;
+                p.vy = 0;
+                p.fallStartY = p.y;
+                p.jumpScoredIds.clear();
+                p.jumpScoreCount = 0;
+                this.jumpPressedOnce = false;
+                return;
+              }
             }
           }
         }
@@ -692,9 +739,9 @@
           global.DKAudio.playJump();
         }
       } else {
-        // 공중에서도 약간의 이동 보정 허용
-        if (moveVx !== 0 && p.vx === 0) {
-          p.vx = moveVx * 0.75;
+        // 공중에서도 좌우 방향키로 사다리나 발판 쪽으로 이동 보정 가능
+        if (moveVx !== 0) {
+          p.vx = moveVx * 0.9;
         }
       }
       this.jumpPressedOnce = false;
