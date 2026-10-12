@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>동키콩 (1981) 아케이드 클론 — Donkey Kong Classic PWA</title>
+  <meta name="description" content="1981년 닌텐도 아케이드 오리지널 동키콩(25m·50m·75m·100m) 완벽 고증 PWA 클론 게임" />
+  <meta name="theme-color" content="#e60012" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="동키콩 1981" />
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+
+  <!-- Retro Pixel Font Fallback & Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="arcade-wrapper">
+    <!-- 상단 아케이드 마키(간판) 및 PWA 컨트롤 바 -->
+    <header class="arcade-marquee">
+      <div class="marquee-brand">
+        <span class="nintendo-badge">NINTENDO 1981</span>
+        <h1 class="marquee-title">DONKEY KONG</h1>
+        <span id="networkBadge" class="network-badge online" title="오프라인 캐시 지원 상태">⚡ PWA READY</span>
+      </div>
+
+      <div class="marquee-controls">
+        <div class="stage-warp-group" aria-label="스테이지 바로가기">
+          <span class="warp-label">STAGE:</span>
+          <button type="button" class="stage-btn active" data-stage="1" title="1스테이지: 25m 철골 공사장 (단축키 1)">25m</button>
+          <button type="button" class="stage-btn" data-stage="2" title="2스테이지: 50m 컨베이어 벨트 (단축키 2)">50m</button>
+          <button type="button" class="stage-btn" data-stage="3" title="3스테이지: 75m 엘리베이터 (단축키 3)">75m</button>
+          <button type="button" class="stage-btn" data-stage="4" title="4스테이지: 100m 철근 나사 뽑기 (단축키 4)">100m</button>
+        </div>
+
+        <div class="utility-group">
+          <button type="button" id="btnSound" class="util-btn" title="사운드 켜기/끄기 (단축키 M)">🔊 사운드 ON</button>
+          <button type="button" id="btnCrt" class="util-btn active" title="브라운관 스캔라인 효과 토글">📺 CRT 효과</button>
+          <button type="button" id="btnHelp" class="util-btn" title="나무위키 원작 고증 및 조작 안내">📖 고증/도움말</button>
+          <button type="button" id="btnInstallPwa" class="util-btn install-btn hidden" title="홈 화면 또는 바탕화면에 앱으로 설치">📲 앱 설치 (PWA)</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 아케이드 캐비닛 베젤 & CRT 모니터 -->
+    <main class="cabinet-body">
+      <div class="bezel-frame">
+        <div id="crtScreen" class="crt-screen scanlines">
+          <!-- 오리지널 아케이드 해상도 비율 (224x256의 2배수인 448x512 내부 캔버스) -->
+          <canvas id="gameCanvas" width="448" height="512" aria-label="동키콩 1981 아케이드 게임 화면"></canvas>
+        </div>
+      </div>
+
+      <!-- 사이드 정보 패널 (데스크톱에서 표시, 모바일에서 접힘/모달) -->
+      <aside id="infoPanel" class="info-panel">
+        <div class="info-card">
+          <h2>🕹️ 조작 키 안내</h2>
+          <ul class="key-list">
+            <li><span>이동</span> <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></li>
+            <li><span>사다리</span> <kbd>↑</kbd> <kbd>↓</kbd> / <kbd>W</kbd> <kbd>S</kbd></li>
+            <li><span>점프</span> <kbd>Space</kbd> / <kbd>Z</kbd></li>
+            <li><span>시작/일시정지</span> <kbd>Enter</kbd> / <kbd>P</kbd></li>
+            <li><span>스테이지 워프</span> <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <h2>🦍 1981 원작 고증 포인트</h2>
+          <ul class="lore-list">
+            <li><strong>점프맨(초기 마리오):</strong> 파란 셔츠 + 빨간 멜빵(후대와 반대 배색) 및 높은 곳 추락 시 낙사 판정.</li>
+            <li><strong>무적 해머:</strong> 전설의 해머 팡파레 BGM! 사용 중 <em>점프·사다리 불가</em>, 직진 타격만 가능.</li>
+            <li><strong>4개 전 스테이지:</strong> 패미컴에서 잘렸던 <strong>50m 컨베이어 벨트</strong>까지 완벽 복원!</li>
+            <li><strong>폴린의 소지품:</strong> 양산·모자·핸드백 획득 시 300~800점 보너스!</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- 모바일 & 터치스크린 전용 가상 아케이드 조이스틱 (PWA 스탠드얼론 완벽 대응) -->
+    <section class="touch-controls" aria-label="터치 아케이드 컨트롤러">
+      <div class="dpad-container">
+        <button type="button" class="dpad-btn dpad-up" data-key="ArrowUp" aria-label="위로 이동 (사다리 오르기)">▲</button>
+        <div class="dpad-middle-row">
+          <button type="button" class="dpad-btn dpad-left" data-key="ArrowLeft" aria-label="왼쪽 이동">◀</button>
+          <div class="dpad-center"></div>
+          <button type="button" class="dpad-btn dpad-right" data-key="ArrowRight" aria-label="오른쪽 이동">▶</button>
+        </div>
+        <button type="button" class="dpad-btn dpad-down" data-key="ArrowDown" aria-label="아래로 이동 (사다리 내려가기)">▼</button>
+      </div>
+
+      <div class="action-container">
+        <div class="coin-row">
+          <button type="button" id="btnTouchStart" class="arcade-start-btn">1P START</button>
+          <button type="button" id="btnTouchPause" class="arcade-pause-btn">PAUSE</button>
+        </div>
+        <button type="button" class="jump-btn" data-key="Space" aria-label="점프 (JUMP)">
+          <span class="jump-main">JUMP</span>
+          <span class="jump-sub">점프</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 고증/도움말 모달 -->
+  <div id="helpModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">📖 동키콩(1981) 아케이드 고증 & 스테이지 가이드</h2>
+        <button type="button" id="btnCloseModal" class="modal-close" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-quote">"How high can you get? (여기까지 올라올 수 있을까?)" — 1981년 닌텐도 아케이드 오리지널</p>
+        <div class="stage-guide-grid">
+          <div class="guide-item">
+            <h3>1️⃣ STAGE 1 — 25m (철골 공사장)</h3>
+            <p>동키콩이 시작하자마자 던지는 파란 <strong>휘발유통</strong>이 드럼통(OIL)에 불을 붙여 <strong>방해꾼 벌레(불씨)</strong>를 깨웁니다. 사다리를 타고 내려오는 나무통을 점프로 뛰어넘거나(100점) <strong>무적 해머</strong>로 부수며 올라가세요!</p>
+          </div>
+          <div class="guide-item">
+            <h3>2️⃣ STAGE 2 — 50m (컨베이어 벨트)</h3>
+            <p>패미컴 이식판에서 용량 부족으로 삭제되었던 아케이드 전용 스테이지! 방향이 바뀌는 컨베이어 벨트와 <strong>시멘트</strong>, 신축 사다리를 돌파하세요.</p>
+          </div>
+          <div class="guide-item">
+            <h3>3️⃣ STAGE 3 — 75m (엘리베이터)</h3>
+            <p>상하로 움직이는 엘리베이터 발판을 타이밍에 맞춰 건너세요. 맨 꼭대기 왼쪽에서 통통 튀며 낙하하는 <strong>스프링</strong> 장애물을 특히 주의해야 합니다!</p>
+          </div>
+          <div class="guide-item">
+            <h3>4️⃣ STAGE 4 — 100m (철근 나사 뽑기)</h3>
+            <p>불꽃들을 피해 노란색 <strong>철근 나사(리벳) 8개</strong>를 모두 밟아 뽑아내면 중앙 철골이 무너지며 동키콩이 추락하고 <strong>레이디(폴린)</strong>를 구출합니다!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 스크립트 로드 (file:// 및 http:// 서버 환경 모두 호환) -->
+  <script src="./js/audio.js"></script>
+  <script src="./js/sprites.js"></script>
+  <script src="./js/stages.js"></script>
+  <script src="./js/game.js"></script>
+  <script src="./js/pwa.js"></script>
+</body>
+</html>
