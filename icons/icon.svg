@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- Background -->
+  <rect width="64" height="64" rx="10" fill="#07070c"/>
+  <!-- Red Arcade Girder Top & Bottom -->
+  <rect x="4" y="6" width="56" height="4" fill="#e60012"/>
+  <rect x="4" y="54" width="56" height="4" fill="#e60012"/>
+  <rect x="8" y="8" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="20" y="8" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="32" y="8" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="44" y="8" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="8" y="55" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="20" y="55" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="32" y="55" width="4" height="2" fill="#ff9eb5"/>
+  <rect x="44" y="55" width="4" height="2" fill="#ff9eb5"/>
+
+  <!-- Classic Donkey Kong Pixel Art Silhouette -->
+  <!-- Head & Ears -->
+  <rect x="24" y="12" width="16" height="4" fill="#a84400"/>
+  <rect x="20" y="16" width="24" height="10" fill="#a84400"/>
+  <rect x="16" y="18" width="4" height="6" fill="#f8b878"/>
+  <rect x="44" y="18" width="4" height="6" fill="#f8b878"/>
+  <!-- Face & Grin -->
+  <rect x="24" y="18" width="16" height="8" fill="#f8b878"/>
+  <rect x="26" y="19" width="3" height="3" fill="#000000"/>
+  <rect x="35" y="19" width="3" height="3" fill="#000000"/>
+  <rect x="25" y="23" width="14" height="2" fill="#ffffff"/>
+  <!-- Torso & Arms -->
+  <rect x="14" y="26" width="36" height="14" fill="#a84400"/>
+  <rect x="24" y="28" width="16" height="10" fill="#f8b878"/>
+  <!-- Hands holding Barrel -->
+  <rect x="10" y="30" width="6" height="10" fill="#a84400"/>
+  <rect x="48" y="30" width="6" height="10" fill="#a84400"/>
+  <!-- Legs -->
+  <rect x="18" y="40" width="8" height="10" fill="#a84400"/>
+  <rect x="38" y="40" width="8" height="10" fill="#a84400"/>
+  <rect x="16" y="48" width="10" height="4" fill="#f8b878"/>
+  <rect x="38" y="48" width="10" height="4" fill="#f8b878"/>
+  <!-- Classic Barrel in Center Bottom -->
+  <rect x="27" y="41" width="10" height="10" fill="#e46800"/>
+  <rect x="27" y="43" width="10" height="2" fill="#00d8ff"/>
+  <rect x="27" y="47" width="10" height="2" fill="#00d8ff"/>
+</svg>

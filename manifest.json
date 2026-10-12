@@ -1,0 +1,32 @@
+{
+  "name": "동키콩 (1981) 아케이드 클론 — Donkey Kong Classic",
+  "short_name": "동키콩 1981",
+  "description": "1981년 닌텐도 아케이드 오리지널 동키콩(25m·50m·75m·100m) 고증 PWA 게임",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07070c",
+  "theme_color": "#e60012",
+  "categories": ["games", "entertainment", "arcade"],
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
