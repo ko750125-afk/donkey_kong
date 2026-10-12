@@ -13,6 +13,24 @@
   const CLIMB_SPEED = 1.25;
   const MAX_SAFE_FALL = 76; // 이륙한 바닥 기준 한 층 이상 추락할 때만 낙사 판정
 
+  const DIFFICULTY_PRESETS = {
+    beginner: {
+      label: '초보',
+      speedMult: 0.75,
+      intervalMult: 1.35
+    },
+    intermediate: {
+      label: '중급',
+      speedMult: 1.05,
+      intervalMult: 1.0
+    },
+    advanced: {
+      label: '고급',
+      speedMult: 1.5,
+      intervalMult: 0.7
+    }
+  };
+
   class DonkeyKongGame {
     constructor() {
       this.canvas = document.getElementById('gameCanvas');
@@ -23,7 +41,7 @@
       this.tick = 0;
       this.stateTimer = 0;
 
-      // 점수 및 레벨 상태
+      // 점수, 레벨 및 장애물 속도 난이도 상태
       this.score = 0;
       this.highScore = Number(localStorage.getItem('dk1981_high_score') || 7650);
       this.lives = 3;
@@ -31,6 +49,10 @@
       this.stageNum = 1; // 1(25m), 2(50m), 3(75m), 4(100m)
       this.bonus = 5000;
       this.bonusTick = 0;
+      this.difficulty = localStorage.getItem('dk1981_difficulty') || 'beginner';
+      if (!DIFFICULTY_PRESETS[this.difficulty]) {
+        this.difficulty = 'beginner';
+      }
 
       // 입력 상태 (키보드 + 모바일 가상 패드 통합)
       this.keys = {
@@ -55,6 +77,7 @@
       this.sparks = [];
 
       this.bindEvents();
+      this.updateDifficultyButtons();
       this.loadStage(1, false);
       this.state = 'TITLE';
 
@@ -63,6 +86,42 @@
       this.accumulator = 0;
       this.stepMs = 1000 / 60;
       requestAnimationFrame((t) => this.loop(t));
+    }
+
+    getSpeedMult() {
+      return (DIFFICULTY_PRESETS[this.difficulty] || DIFFICULTY_PRESETS.beginner).speedMult;
+    }
+
+    getIntervalMult() {
+      return (DIFFICULTY_PRESETS[this.difficulty] || DIFFICULTY_PRESETS.beginner).intervalMult;
+    }
+
+    setDifficulty(diff) {
+      if (!DIFFICULTY_PRESETS[diff]) return;
+      const prevMult = this.getSpeedMult();
+      this.difficulty = diff;
+      localStorage.setItem('dk1981_difficulty', diff);
+      this.updateDifficultyButtons();
+
+      // 이미 필드에 나와 있는 장애물 속도도 즉시 비율에 맞춰 갱신
+      const ratio = this.getSpeedMult() / prevMult;
+      for (const b of this.barrels) {
+        b.vx *= ratio;
+        if (b.throwDirect) b.vy *= ratio;
+      }
+      for (const fb of this.fireballs) {
+        fb.vx *= ratio;
+      }
+      for (const sp of this.springs) {
+        sp.vx *= ratio;
+      }
+    }
+
+    updateDifficultyButtons() {
+      document.querySelectorAll('.diff-btn').forEach((btn) => {
+        const isCurrent = btn.getAttribute('data-difficulty') === this.difficulty;
+        btn.classList.toggle('active', isCurrent);
+      });
     }
 
     bindEvents() {
@@ -139,6 +198,14 @@
           this.triggerStart();
         });
       }
+
+      document.querySelectorAll('.diff-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const diff = btn.getAttribute('data-difficulty');
+          this.setDifficulty(diff);
+          btn.blur();
+        });
+      });
 
       document.querySelectorAll('.stage-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -799,10 +866,12 @@
 
     updateDonkeyKong() {
       const dk = this.dk;
+      const speedMult = this.getSpeedMult();
+      const intervalMult = this.getIntervalMult();
 
       // 50m 및 100m에서 동키콩 좌우 움직임
       if (this.stageNum === 2) {
-        dk.x += dk.vx;
+        dk.x += dk.vx * speedMult;
         if (dk.x < 48 || dk.x > 336) {
           dk.vx = -dk.vx;
         }
@@ -811,23 +880,23 @@
       dk.actionTimer--;
       if (dk.actionTimer > 0) return;
 
-      // STAGE 1 (25m): 나무통 & 휘발유통 굴리기 (투척 간격 및 속도 완화 적용!)
+      // STAGE 1 (25m): 나무통 & 휘발유통 굴리기 (난이도별 투척 간격 및 속도 적용!)
       if (this.stageNum === 1) {
         if (dk.pose === 'roar' || dk.pose === 'right') {
           dk.pose = 'left';
-          dk.actionTimer = 28;
+          dk.actionTimer = Math.round(24 * intervalMult);
         } else if (dk.pose === 'left') {
           dk.pose = 'hold';
           // 첫 번째 통은 반드시 파란 휘발유통! 이후에는 일정 확률로 파란 통 등장
           dk.holdingBlue = !dk.threwFirstOil || Math.random() < 0.22;
-          dk.actionTimer = 30;
+          dk.actionTimer = Math.round(26 * intervalMult);
         } else if (dk.pose === 'hold') {
           dk.pose = 'right';
-          const interval = Math.max(75, 125 - (this.level - 1) * 10);
-          dk.actionTimer = interval;
+          const baseInterval = Math.max(65, 110 - (this.level - 1) * 10);
+          dk.actionTimer = Math.round(baseInterval * intervalMult);
 
           if (!dk.threwFirstOil) {
-            // 게임 시작 직후 동키콩이 휘발유통을 아래 드럼통에 던짐 (속도 완화)
+            // 게임 시작 직후 동키콩이 휘발유통을 아래 드럼통에 던짐 (난이도 속도 배율 적용)
             dk.threwFirstOil = true;
             this.barrels.push({
               uid: Math.random(),
@@ -835,8 +904,8 @@
               y: dk.y + 32,
               w: 14,
               h: 14,
-              vx: -0.42,
-              vy: 1.85,
+              vx: -0.52 * speedMult,
+              vy: 2.2 * speedMult,
               isOil: true,
               throwDirect: true,
               onLadder: false,
@@ -844,17 +913,17 @@
               rot: 0
             });
           } else {
-            // 가끔 직격으로 던지는 통 vs 철골을 따라 굴리는 통 (속도 하향 조정)
+            // 가끔 직격으로 던지는 통 vs 철골을 따라 굴리는 통 (난이도 속도 배율 적용)
             const directThrow = Math.random() < 0.14;
-            const rollSpeed = 1.15 + (this.level - 1) * 0.1;
+            const rollSpeed = (1.45 + (this.level - 1) * 0.1) * speedMult;
             this.barrels.push({
               uid: Math.random(),
               x: dk.x + 48,
               y: dk.y + 30,
               w: 14,
               h: 14,
-              vx: directThrow ? (this.player.x - dk.x) * 0.0075 : rollSpeed,
-              vy: directThrow ? 1.65 : 0,
+              vx: directThrow ? (this.player.x - dk.x) * 0.009 * speedMult : rollSpeed,
+              vy: directThrow ? 2.0 * speedMult : 0,
               isOil: dk.holdingBlue,
               throwDirect: directThrow,
               onLadder: false,
@@ -872,10 +941,11 @@
 
     updateBarrels() {
       const hammerBox = this.getHammerHitbox();
+      const speedMult = this.getSpeedMult();
 
       for (let i = this.barrels.length - 1; i >= 0; i--) {
         const b = this.barrels[i];
-        b.rot += 0.16;
+        b.rot += 0.18 * speedMult;
 
         // 1) 직선 투척된 통 (시작 시 휘발유통 등)
         if (b.throwDirect) {
@@ -893,16 +963,16 @@
             continue;
           }
         }
-        // 2) 사다리를 타고 내려오는 중인 나무통 (속도 완화: 2.0 -> 1.25)
+        // 2) 사다리를 타고 내려오는 중인 나무통 (난이도 배율 적용)
         else if (b.onLadder && b.targetLadder) {
-          b.y += 1.25;
+          b.y += 1.65 * speedMult;
           if (b.y >= b.targetLadder.y2 - b.h) {
             b.y = b.targetLadder.y2 - b.h;
             b.onLadder = false;
             b.targetLadder = null;
           }
         }
-        // 3) 철골 위를 굴러가는 나무통 (속도 완화: 1.75 -> 1.15)
+        // 3) 철골 위를 굴러가는 나무통 (난이도 배율 적용)
         else {
           b.x += b.vx;
           b.y += b.vy;
@@ -917,7 +987,7 @@
                 onGirder = g;
                 b.y = gy - b.h;
                 b.vy = 0;
-                const speed = 1.15 + (this.level - 1) * 0.1;
+                const speed = (1.45 + (this.level - 1) * 0.1) * speedMult;
                 b.vx = (g.rollDir || -1) * speed;
                 break;
               }
@@ -977,13 +1047,14 @@
     }
 
     spawnFireball(x, y, isBig = false) {
+      const speedMult = this.getSpeedMult();
       this.fireballs.push({
         uid: Math.random(),
         x,
         y,
         w: isBig ? 16 : 14,
         h: isBig ? 16 : 14,
-        vx: (Math.random() < 0.5 ? -1 : 1) * (0.68 + (this.level - 1) * 0.08),
+        vx: (Math.random() < 0.5 ? -1 : 1) * (0.85 + (this.level - 1) * 0.08) * speedMult,
         vy: 0,
         isBig,
         onLadder: false,
@@ -993,8 +1064,12 @@
     }
 
     updateFireballs() {
+      const speedMult = this.getSpeedMult();
+      const intervalMult = this.getIntervalMult();
+      const spawnModulo = Math.max(180, Math.round(310 * intervalMult));
+
       // 100m 스테이지에서는 주기적으로 불꽃이 최대 5마리까지 충원됨
-      if (this.stageNum === 4 && this.tick % 320 === 0 && this.fireballs.length < 5) {
+      if (this.stageNum === 4 && this.tick % spawnModulo === 0 && this.fireballs.length < 5) {
         this.spawnFireball(216, 120, true);
       }
 
@@ -1004,7 +1079,7 @@
         const fb = this.fireballs[i];
 
         if (fb.onLadder && fb.targetLadder) {
-          fb.y += fb.ladderDir * 0.8;
+          fb.y += fb.ladderDir * 0.95 * speedMult;
           if (fb.ladderDir < 0 && fb.y <= fb.targetLadder.y1 - fb.h) {
             fb.y = fb.targetLadder.y1 - fb.h;
             fb.onLadder = false;
@@ -1084,8 +1159,11 @@
     // 50m 스테이지 시멘트(파이 팬) 업데이트
     updateCementPans() {
       if (this.stageNum !== 2) return;
+      const speedMult = this.getSpeedMult();
+      const intervalMult = this.getIntervalMult();
+      const panInterval = Math.max(85, Math.round(135 * intervalMult));
 
-      if (this.tick % 145 === 0 && this.cementPans.length < 4) {
+      if (this.tick % panInterval === 0 && this.cementPans.length < 4) {
         const tier2Left = Math.random() < 0.5;
         if (Math.random() < 0.55) {
           this.cementPans.push({
@@ -1114,7 +1192,7 @@
       for (let i = this.cementPans.length - 1; i >= 0; i--) {
         const pan = this.cementPans[i];
         const g = this.stage.girders.find((gr) => gr.id === pan.girderId);
-        const speed = g && g.conveyor ? g.conveyor * 1.15 : 0.75;
+        const speed = (g && g.conveyor ? g.conveyor * 1.35 : 0.9) * speedMult;
         pan.x += speed;
 
         // 중앙 화로(x: 196..252) 또는 화면 끝에 도달하면 소멸
@@ -1146,15 +1224,16 @@
       }
     }
 
-    // 75m 스테이지 스프링 장애물 업데이트 (속도 완화 적용)
+    // 75m 스테이지 스프링 장애물 업데이트 (난이도 배율 적용)
     spawnSpring() {
+      const speedMult = this.getSpeedMult();
       this.springs.push({
         uid: Math.random(),
         x: 20,
         y: 92,
         w: 14,
         h: 16,
-        vx: 1.25 + (this.level - 1) * 0.1,
+        vx: (1.55 + (this.level - 1) * 0.1) * speedMult,
         vy: -2.9,
         fallingShaft: false,
         compressed: false
@@ -1163,8 +1242,11 @@
 
     updateSprings() {
       if (this.stageNum !== 3) return;
+      const speedMult = this.getSpeedMult();
+      const intervalMult = this.getIntervalMult();
 
-      const spawnInterval = Math.max(130, 185 - (this.level - 1) * 12);
+      const baseSpawnInterval = Math.max(115, 165 - (this.level - 1) * 12);
+      const spawnInterval = Math.max(75, Math.round(baseSpawnInterval * intervalMult));
       if (this.tick % spawnInterval === 0) {
         this.spawnSpring();
       }
@@ -1182,7 +1264,7 @@
             if (sp.x >= 292) {
               sp.fallingShaft = true;
               sp.vx = 0;
-              sp.vy = 2.0;
+              sp.vy = 2.4 * speedMult;
               global.DKAudio.playSpringBounce(true);
             } else {
               sp.y = 134 - sp.h;
@@ -1194,7 +1276,7 @@
             sp.compressed = false;
           }
         } else {
-          sp.y += 2.4;
+          sp.y += 2.8 * speedMult;
           if (sp.y > CANVAS_H + 20) {
             this.springs.splice(i, 1);
             continue;
