@@ -68,7 +68,7 @@
         { type: 'hammer', x: 64, y: 366, w: 16, h: 18, collected: false },
         { type: 'hammer', x: 316, y: 224, w: 16, h: 18, collected: false },
         { type: 'hat', x: 380, y: 326, w: 16, h: 14, score: 300, collected: false },
-        { type: 'purse', x: 120, y: 174, w: 16, h: 16, score: 500, collected: false }
+        { type: 'key', x: 120, y: 174, w: 16, h: 16, score: 500, collected: false }
       ];
 
       return {
@@ -134,7 +134,7 @@
         { type: 'hammer', x: 216, y: 182, w: 16, h: 18, collected: false },
         { type: 'parasol', x: 380, y: 204, w: 16, h: 18, score: 300, collected: false },
         { type: 'hat', x: 68, y: 378, w: 16, h: 14, score: 500, collected: false },
-        { type: 'purse', x: 368, y: 460, w: 16, h: 16, score: 800, collected: false }
+        { type: 'key', x: 368, y: 460, w: 16, h: 16, score: 800, collected: false }
       ];
 
       return {
@@ -206,7 +206,7 @@
       const items = [
         { type: 'parasol', x: 44, y: 216, w: 16, h: 18, score: 300, collected: false },
         { type: 'hat', x: 204, y: 188, w: 16, h: 14, score: 500, collected: false },
-        { type: 'purse', x: 356, y: 436, w: 16, h: 16, score: 800, collected: false }
+        { type: 'key', x: 356, y: 436, w: 16, h: 16, score: 800, collected: false }
       ];
 
       return {
@@ -278,7 +278,7 @@
       { type: 'hammer', x: 84, y: 176, w: 16, h: 18, collected: false },
       { type: 'parasol', x: 68, y: 370, w: 16, h: 18, score: 300, collected: false },
       { type: 'hat', x: 356, y: 286, w: 16, h: 14, score: 500, collected: false },
-      { type: 'purse', x: 344, y: 458, w: 16, h: 16, score: 800, collected: false }
+      { type: 'key', x: 344, y: 458, w: 16, h: 16, score: 800, collected: false }
     ];
 
     return {

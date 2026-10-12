@@ -89,10 +89,22 @@
       }
     }
 
-    // 폴린 소지품(양산, 모자, 핸드백) 획득 사운드
+    // 폴린 소지품(양산, 모자) 획득 사운드
     playItemPickup() {
       const notes = [659.25, 783.99, 987.77, 1318.5];
       notes.forEach((n, i) => this.playTone(n, 0.08, 'square', 0.13, i * 0.06));
+    }
+
+    // 황금 열쇠 획득 & 폴린 쇠창살 개방 효과음
+    playCageUnlock() {
+      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98];
+      notes.forEach((n, i) => this.playTone(n, 0.09, 'square', 0.15, i * 0.065));
+    }
+
+    // 열쇠 없이 쇠창살 접근 시 경고음
+    playLockedWarning() {
+      this.playTone(150, 0.12, 'sawtooth', 0.12, 0);
+      this.playTone(120, 0.16, 'sawtooth', 0.12, 0.13);
     }
 
     // 무적 해머로 적/나무통 격파 시 타격음

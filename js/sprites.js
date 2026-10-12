@@ -279,7 +279,7 @@
     },
 
     /**
-     * 레이디(폴린) 렌더링
+     * 레이디(폴린) 및 감금 쇠창살(Iron Cage) 렌더링
      */
     drawPauline(ctx, pauline, tick) {
       ctx.save();
@@ -315,11 +315,50 @@
       ctx.fillRect(x + 5, y + 23, 3, 3);
       ctx.fillRect(x + 10, y + 23, 3, 3);
 
-      // HELP! 말풍선 (주기적 점멸)
-      if (!pauline.rescued && Math.floor(tick / 35) % 2 === 0) {
-        ctx.fillStyle = '#00ffff';
+      // 쇠창살(Iron Cage) 렌더링 (열쇠 획득 시 위로 스르륵 열리며 사라지는 애니메이션!)
+      const openProg = pauline.cageOpenProgress || 0;
+      if (!pauline.rescued && openProg < 1) {
+        const liftY = Math.round(openProg * 30);
+        const cageX = x - 6;
+        const cageY = y - 4 - liftY;
+        const cageW = 30;
+        const cageH = Math.max(4, Math.round(30 * (1 - openProg * 0.85)));
+
+        ctx.globalAlpha = Math.max(0, 1 - openProg * 0.9);
+        const barColor = openProg > 0 ? (Math.floor(tick / 3) % 2 ? '#ffd000' : '#00ffff') : '#b8c4dc';
+        const frameColor = openProg > 0 ? '#ffffff' : '#6c7a96';
+
+        // 상/하단 철제 프레임
+        ctx.fillStyle = frameColor;
+        ctx.fillRect(cageX - 1, cageY, cageW + 2, 3);
+        ctx.fillRect(cageX - 1, cageY + cageH - 2, cageW + 2, 2);
+
+        // 수직 쇠창살 기둥 5개
+        ctx.fillStyle = barColor;
+        for (let bx = 0; bx <= cageW; bx += 7) {
+          ctx.fillRect(cageX + bx, cageY + 2, 2, cageH - 3);
+        }
+
+        // 잠금 표시 (열리기 전 전면 황금 자물쇠)
+        if (openProg === 0) {
+          ctx.fillStyle = '#ffd000';
+          ctx.fillRect(cageX + cageW - 4, cageY + 12, 6, 6);
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(cageX + cageW - 2, cageY + 14, 2, 3);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // 상태 말풍선 (열쇠 없이 접근 시 NEED KEY! 강조, 평소엔 HELP!)
+      if (!pauline.rescued) {
         ctx.font = 'bold 9px "Press Start 2P", monospace';
-        ctx.fillText('HELP!', x + 20, y + 8);
+        if (pauline.needKeyWarnTimer && pauline.needKeyWarnTimer > 0) {
+          ctx.fillStyle = Math.floor(tick / 6) % 2 === 0 ? '#ffff00' : '#ff2244';
+          ctx.fillText('NEED KEY!', x + 26, y + 6);
+        } else if (Math.floor(tick / 35) % 2 === 0) {
+          ctx.fillStyle = pauline.cageUnlocked ? '#00ff88' : '#00ffff';
+          ctx.fillText(pauline.cageUnlocked ? 'FREE!' : 'HELP!', x + 28, y + 8);
+        }
       }
 
       ctx.restore();
@@ -522,15 +561,22 @@
         ctx.fillRect(x, y + 8, 16, 3);
         ctx.fillStyle = '#00ffff';
         ctx.fillRect(x + 3, y + 6, 10, 2);
-      } else if (item.type === 'purse') {
-        // 폴린의 핸드백
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x + 5, y + 1, 6, 5);
-        ctx.fillStyle = '#ff55b8';
-        ctx.fillRect(x + 2, y + 5, 12, 9);
-        ctx.fillStyle = '#ffff00';
-        ctx.fillRect(x + 6, y + 7, 4, 2);
+      } else if (item.type === 'key' || item.type === 'purse') {
+        // 폴린의 쇠창살을 여는 직관적인 황금 열쇠(Golden Key)
+        ctx.fillStyle = '#ffd000';
+        // 왼쪽 열쇠 손잡이 고리 (속이 빈 원형/사각 링)
+        ctx.fillRect(x, y + 3, 7, 8);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x + 2, y + 5, 3, 4);
+        // 열쇠 몸통 기둥 & 우측 열쇠 날 2개
+        ctx.fillStyle = '#ffd000';
+        ctx.fillRect(x + 7, y + 5, 11, 3);
+        ctx.fillRect(x + 12, y + 8, 2, 4);
+        ctx.fillRect(x + 15, y + 8, 2, 5);
+        // 하이라이트 반짝임
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 1, y + 3, 5, 1);
+        ctx.fillRect(x + 8, y + 5, 8, 1);
       }
       ctx.restore();
     },

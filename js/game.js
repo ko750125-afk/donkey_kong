@@ -316,7 +316,10 @@
         y: this.stage.paulineSpawn.y,
         w: 18,
         h: 26,
-        rescued: false
+        rescued: false,
+        cageUnlocked: false,
+        cageOpenProgress: 0,
+        needKeyWarnTimer: 0
       };
 
       // 스테이지별 초기 적 배치
@@ -531,10 +534,17 @@
           p.onGround = true;
           p.fallStartY = p.y;
 
-          // 폴린 구출 사다리 완주 시 스테이지 클리어!
+          // 폴린 구출 사다리 완주 시: 열쇠로 쇠창살을 연 상태에서만 구출 가능!
           if (lad.isGoalLadder) {
-            this.triggerStageClear();
-            return;
+            if (this.pauline.cageUnlocked) {
+              this.triggerStageClear();
+              return;
+            } else {
+              if (!this.pauline.needKeyWarnTimer) {
+                global.DKAudio.playLockedWarning();
+              }
+              this.pauline.needKeyWarnTimer = 75;
+            }
           }
         }
         // 사다리 하단 도달 판정
@@ -692,10 +702,20 @@
           p.x += landedSurface.conveyor;
         }
 
-        // 폴린 플랫폼 도달 시 클리어!
+        // 폴린 플랫폼 도달 시: 열쇠로 쇠창살이 열렸을 때만 구출(클리어), 아니면 쇠창살 앞에서 가로막힘!
         if (landedSurface.isGoalPlatform && this.stageNum !== 4) {
-          this.triggerStageClear();
-          return;
+          if (this.pauline.cageUnlocked) {
+            this.triggerStageClear();
+            return;
+          } else {
+            if (p.x < 234) {
+              p.x = 234;
+              if (!this.pauline.needKeyWarnTimer) {
+                global.DKAudio.playLockedWarning();
+              }
+              this.pauline.needKeyWarnTimer = 75;
+            }
+          }
         }
       } else {
         if (p.onGround) {
@@ -791,23 +811,23 @@
       dk.actionTimer--;
       if (dk.actionTimer > 0) return;
 
-      // STAGE 1 (25m): 나무통 & 휘발유통 굴리기
+      // STAGE 1 (25m): 나무통 & 휘발유통 굴리기 (투척 간격 및 속도 완화 적용!)
       if (this.stageNum === 1) {
         if (dk.pose === 'roar' || dk.pose === 'right') {
           dk.pose = 'left';
-          dk.actionTimer = 22;
+          dk.actionTimer = 28;
         } else if (dk.pose === 'left') {
           dk.pose = 'hold';
           // 첫 번째 통은 반드시 파란 휘발유통! 이후에는 일정 확률로 파란 통 등장
           dk.holdingBlue = !dk.threwFirstOil || Math.random() < 0.22;
-          dk.actionTimer = 24;
+          dk.actionTimer = 30;
         } else if (dk.pose === 'hold') {
           dk.pose = 'right';
-          const interval = Math.max(45, 95 - this.level * 10);
+          const interval = Math.max(75, 125 - (this.level - 1) * 10);
           dk.actionTimer = interval;
 
           if (!dk.threwFirstOil) {
-            // 나무위키 고증: 게임 시작 직후 동키콩이 휘발유통을 직선으로 아래 드럼통에 던짐!
+            // 게임 시작 직후 동키콩이 휘발유통을 아래 드럼통에 던짐 (속도 완화)
             dk.threwFirstOil = true;
             this.barrels.push({
               uid: Math.random(),
@@ -815,8 +835,8 @@
               y: dk.y + 32,
               w: 14,
               h: 14,
-              vx: -0.65,
-              vy: 3.1,
+              vx: -0.42,
+              vy: 1.85,
               isOil: true,
               throwDirect: true,
               onLadder: false,
@@ -824,16 +844,17 @@
               rot: 0
             });
           } else {
-            // 가끔 직격으로 던지는 통 vs 철골을 따라 굴리는 통
-            const directThrow = Math.random() < 0.16;
+            // 가끔 직격으로 던지는 통 vs 철골을 따라 굴리는 통 (속도 하향 조정)
+            const directThrow = Math.random() < 0.14;
+            const rollSpeed = 1.15 + (this.level - 1) * 0.1;
             this.barrels.push({
               uid: Math.random(),
               x: dk.x + 48,
               y: dk.y + 30,
               w: 14,
               h: 14,
-              vx: directThrow ? (this.player.x - dk.x) * 0.012 : 1.75 + this.level * 0.15,
-              vy: directThrow ? 2.6 : 0,
+              vx: directThrow ? (this.player.x - dk.x) * 0.0075 : rollSpeed,
+              vy: directThrow ? 1.65 : 0,
               isOil: dk.holdingBlue,
               throwDirect: directThrow,
               onLadder: false,
@@ -854,7 +875,7 @@
 
       for (let i = this.barrels.length - 1; i >= 0; i--) {
         const b = this.barrels[i];
-        b.rot += 0.22;
+        b.rot += 0.16;
 
         // 1) 직선 투척된 통 (시작 시 휘발유통 등)
         if (b.throwDirect) {
@@ -872,16 +893,16 @@
             continue;
           }
         }
-        // 2) 사다리를 타고 내려오는 중인 나무통
+        // 2) 사다리를 타고 내려오는 중인 나무통 (속도 완화: 2.0 -> 1.25)
         else if (b.onLadder && b.targetLadder) {
-          b.y += 2.0;
+          b.y += 1.25;
           if (b.y >= b.targetLadder.y2 - b.h) {
             b.y = b.targetLadder.y2 - b.h;
             b.onLadder = false;
             b.targetLadder = null;
           }
         }
-        // 3) 철골 위를 굴러가는 나무통
+        // 3) 철골 위를 굴러가는 나무통 (속도 완화: 1.75 -> 1.15)
         else {
           b.x += b.vx;
           b.y += b.vy;
@@ -896,20 +917,20 @@
                 onGirder = g;
                 b.y = gy - b.h;
                 b.vy = 0;
-                const speed = 1.75 + this.level * 0.15;
+                const speed = 1.15 + (this.level - 1) * 0.1;
                 b.vx = (g.rollDir || -1) * speed;
                 break;
               }
             }
           }
 
-          // 사다리 상단을 지날 때 일정 확률(플레이어가 아래쪽에 있으면 확률 증가)로 사다리 타고 내려옴!
+          // 사다리 상단을 지날 때 일정 확률로 사다리 타고 내려옴
           if (onGirder) {
             for (const lad of this.stage.ladders) {
               if (lad.decorative || lad.isGoalLadder) continue;
-              if (Math.abs(bxCenter - lad.x) < 3.5 && Math.abs(b.y + b.h - lad.y1) < 8) {
+              if (Math.abs(bxCenter - lad.x) < 3.0 && Math.abs(b.y + b.h - lad.y1) < 8) {
                 const playerBelow = this.player.y > b.y;
-                const chance = playerBelow ? 0.38 : 0.18;
+                const chance = playerBelow ? 0.32 : 0.15;
                 if (Math.random() < chance) {
                   b.onLadder = true;
                   b.targetLadder = lad;
@@ -962,7 +983,7 @@
         y,
         w: isBig ? 16 : 14,
         h: isBig ? 16 : 14,
-        vx: (Math.random() < 0.5 ? -1 : 1) * (0.85 + this.level * 0.1),
+        vx: (Math.random() < 0.5 ? -1 : 1) * (0.68 + (this.level - 1) * 0.08),
         vy: 0,
         isBig,
         onLadder: false,
@@ -983,7 +1004,7 @@
         const fb = this.fireballs[i];
 
         if (fb.onLadder && fb.targetLadder) {
-          fb.y += fb.ladderDir * 0.95;
+          fb.y += fb.ladderDir * 0.8;
           if (fb.ladderDir < 0 && fb.y <= fb.targetLadder.y1 - fb.h) {
             fb.y = fb.targetLadder.y1 - fb.h;
             fb.onLadder = false;
@@ -1064,7 +1085,7 @@
     updateCementPans() {
       if (this.stageNum !== 2) return;
 
-      if (this.tick % 135 === 0 && this.cementPans.length < 4) {
+      if (this.tick % 145 === 0 && this.cementPans.length < 4) {
         const tier2Left = Math.random() < 0.5;
         if (Math.random() < 0.55) {
           this.cementPans.push({
@@ -1093,7 +1114,7 @@
       for (let i = this.cementPans.length - 1; i >= 0; i--) {
         const pan = this.cementPans[i];
         const g = this.stage.girders.find((gr) => gr.id === pan.girderId);
-        const speed = g && g.conveyor ? g.conveyor * 1.4 : 0.9;
+        const speed = g && g.conveyor ? g.conveyor * 1.15 : 0.75;
         pan.x += speed;
 
         // 중앙 화로(x: 196..252) 또는 화면 끝에 도달하면 소멸
@@ -1125,7 +1146,7 @@
       }
     }
 
-    // 75m 스테이지 스프링 장애물 업데이트 (나무위키 고증: 상단 왼쪽에서 튀어 이동하다 중간 샤프트로 낙하!)
+    // 75m 스테이지 스프링 장애물 업데이트 (속도 완화 적용)
     spawnSpring() {
       this.springs.push({
         uid: Math.random(),
@@ -1133,8 +1154,8 @@
         y: 92,
         w: 14,
         h: 16,
-        vx: 1.85 + this.level * 0.15,
-        vy: -3.2,
+        vx: 1.25 + (this.level - 1) * 0.1,
+        vy: -2.9,
         fallingShaft: false,
         compressed: false
       });
@@ -1143,7 +1164,7 @@
     updateSprings() {
       if (this.stageNum !== 3) return;
 
-      const spawnInterval = Math.max(95, 150 - this.level * 12);
+      const spawnInterval = Math.max(130, 185 - (this.level - 1) * 12);
       if (this.tick % spawnInterval === 0) {
         this.spawnSpring();
       }
@@ -1154,18 +1175,18 @@
         if (!sp.fallingShaft) {
           sp.x += sp.vx;
           sp.y += sp.vy;
-          sp.vy += 0.22;
+          sp.vy += 0.18;
 
-          // 최상단 철골(y=134) 위에서 통통 튀며 이동하다가 우측 샤프트(x >= 295)에서 아래로 직하강!
+          // 최상단 철골(y=134) 위에서 통통 튀며 이동하다가 우측 샤프트(x >= 292)에서 아래로 직하강!
           if (sp.y + sp.h >= 134 && sp.vy > 0) {
             if (sp.x >= 292) {
               sp.fallingShaft = true;
               sp.vx = 0;
-              sp.vy = 2.8;
+              sp.vy = 2.0;
               global.DKAudio.playSpringBounce(true);
             } else {
               sp.y = 134 - sp.h;
-              sp.vy = -3.8;
+              sp.vy = -3.4;
               sp.compressed = true;
               global.DKAudio.playSpringBounce(false);
             }
@@ -1173,7 +1194,7 @@
             sp.compressed = false;
           }
         } else {
-          sp.y += 3.8;
+          sp.y += 2.4;
           if (sp.y > CANVAS_H + 20) {
             this.springs.splice(i, 1);
             continue;
@@ -1190,7 +1211,15 @@
     updateItemsAndRivets() {
       const p = this.player;
 
-      // 1) 아이템(무적 해머, 폴린의 양산/모자/핸드백) 획득 판정
+      // 폴린 쇠창살 오픈 모션 애니메이션 및 경고 타이머 업데이트
+      if (this.pauline.cageUnlocked && this.pauline.cageOpenProgress < 1) {
+        this.pauline.cageOpenProgress = Math.min(1, this.pauline.cageOpenProgress + 0.025);
+      }
+      if (this.pauline.needKeyWarnTimer > 0) {
+        this.pauline.needKeyWarnTimer--;
+      }
+
+      // 1) 아이템(무적 해머, 황금 열쇠, 폴린의 양산/모자) 획득 판정
       for (const item of this.stage.items) {
         if (item.collected) continue;
         if (this.rectsOverlap(p.x, p.y, p.w, p.h, item.x, item.y, item.w, item.h)) {
@@ -1198,6 +1227,20 @@
           if (item.type === 'hammer') {
             p.hammerTimer = 560; // 약 9.3초간 해머 상태!
             global.DKAudio.startBgm('hammer');
+          } else if (item.type === 'key') {
+            // 황금 열쇠 획득 -> 폴린의 쇠창살이 열리며 사라지는 모션 작동!
+            const pts = item.score || 500;
+            this.addScore(pts, item.x, item.y);
+            this.pauline.cageUnlocked = true;
+            this.pauline.needKeyWarnTimer = 0;
+            this.floatingTexts.push({
+              text: 'UNLOCKED!',
+              x: this.pauline.x - 14,
+              y: this.pauline.y - 8,
+              timer: 65
+            });
+            this.addSmashSparks(this.pauline.x + 9, this.pauline.y + 10);
+            global.DKAudio.playCageUnlock();
           } else {
             const pts = item.score || 300;
             this.addScore(pts, item.x, item.y);
@@ -1206,7 +1249,7 @@
         }
       }
 
-      // 2) 100m 스테이지 노란 철근 나사(리벳) 8개 뽑기 판정
+      // 2) 100m 스테이지 노란 철근 나사(리벳) 8개 뽑기 판정 (열쇠도 함께 먹어야 최종 구출 완료!)
       if (this.stageNum === 4) {
         const pxCenter = p.x + p.w / 2;
         const pyFoot = p.y + p.h;
@@ -1214,7 +1257,6 @@
         let remaining = 0;
         for (const r of this.stage.rivets) {
           if (!r.pulled) {
-            // 점프맨이 나사 위를 밟고 지나가거나 바로 위를 점프해 넘을 때 나사가 뽑힘
             if (Math.abs(pxCenter - r.x) <= 8 && pyFoot <= r.y + 8 && pyFoot >= r.y - 26) {
               r.pulled = true;
               this.addScore(100, r.x - 6, r.y - 12);
@@ -1224,9 +1266,12 @@
           if (!r.pulled) remaining++;
         }
 
-        // 8개의 나사를 전부 뽑으면 동키콩 추락 및 폴린 구출 엔딩!
         if (remaining === 0) {
-          this.triggerLevelComplete();
+          if (this.pauline.cageUnlocked) {
+            this.triggerLevelComplete();
+          } else {
+            this.pauline.needKeyWarnTimer = 60;
+          }
         }
       }
     }
