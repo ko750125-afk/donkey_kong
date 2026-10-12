@@ -3,12 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>동키콩 (1981) — Donkey Kong Classic</title>
-  <meta name="description" content="1981년 닌텐도 아케이드 오리지널 동키콩(25m·50m·75m·100m) PWA 클론 게임" />
-  <meta name="theme-color" content="#e60012" />
+  <title>동키콩 (1981) — Donkey Kong Classic PWA</title>
+  <meta name="description" content="1981년 닌텐도 아케이드 오리지널 동키콩(25m·50m·75m·100m) 모바일/PC 지원 PWA 게임" />
+  <meta name="theme-color" content="#050508" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="동키콩 1981" />
+
+  <!-- 카카오톡 / 문자 / SNS 공유 미리보기 (Open Graph) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="🦍 동키콩 (1981) — 아케이드 클래식 PWA 게임" />
+  <meta property="og:description" content="열쇠를 찾아 폴린을 구출하세요! 스마트폰과 PC 어디서나 바로 플레이 가능한 1981 오리지널 동키콩" />
+  <meta property="og:image" content="./icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="🦍 동키콩 (1981) — 아케이드 클래식 PWA" />
+  <meta name="twitter:description" content="스마트폰·PC에서 바로 즐기는 1981년 오리지널 아케이드 동키콩!" />
+  <meta name="twitter:image" content="./icons/icon-512.png" />
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="./manifest.json" />
@@ -22,7 +33,7 @@
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
-  <!-- 오직 게임 화면만 중앙에 표시하는 컨테이너 -->
+  <!-- 게임 화면 + 모바일 전용 터치 패드 컨테이너 -->
   <main class="game-only-stage">
     <div id="crtScreen" class="crt-screen scanlines">
       <canvas id="gameCanvas" width="448" height="512" aria-label="동키콩 1981 게임 화면"></canvas>
@@ -31,6 +42,26 @@
         ⚙️ 설정
       </button>
     </div>
+
+    <!-- 모바일/태블릿 터치 환경에서 자동 표시되는 아케이드 가상 컨트롤러 -->
+    <section id="mobileControls" class="mobile-controls" aria-label="모바일 터치 컨트롤러">
+      <!-- 좌측 십자 방향키 (D-Pad: 슬라이드 드래그 및 멀티터치 지원) -->
+      <div id="dpadZone" class="dpad" role="group" aria-label="방향키 패드">
+        <button type="button" class="dpad-btn dpad-up" data-key="ArrowUp" aria-label="위로 이동 (사다리 오르기)">▲</button>
+        <button type="button" class="dpad-btn dpad-left" data-key="ArrowLeft" aria-label="왼쪽 이동">◀</button>
+        <div class="dpad-center" aria-hidden="true"></div>
+        <button type="button" class="dpad-btn dpad-right" data-key="ArrowRight" aria-label="오른쪽 이동">▶</button>
+        <button type="button" class="dpad-btn dpad-down" data-key="ArrowDown" aria-label="아래로 이동 (사다리 내려가기)">▼</button>
+      </div>
+
+      <!-- 우측 대형 점프 / 시작 버튼 -->
+      <div class="action-zone">
+        <button type="button" id="btnMobileJump" class="jump-pad-btn" data-key="Space" aria-label="점프 및 시작">
+          <span class="jump-main-txt">JUMP</span>
+          <span class="jump-sub-txt">점프 / 시작</span>
+        </button>
+      </div>
+    </section>
   </main>
 
   <!-- 필수 설정 전용 모달 -->
@@ -72,17 +103,28 @@
         </div>
 
         <div class="setting-row">
+          <span class="setting-label">모바일 터치 패드</span>
+          <button type="button" id="btnTouchPad" class="setting-btn active">🎮 자동 (모바일)</button>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label">친구에게 추천하기</span>
+          <button type="button" id="btnShareGame" class="setting-btn share-btn">📤 링크 공유 / 복사</button>
+        </div>
+
+        <div id="pwaInstallRow" class="setting-row">
+          <span class="setting-label">스마트폰/PC 앱 설치</span>
+          <button type="button" id="btnInstallPwa" class="setting-btn install-btn">📲 홈 화면에 앱 설치</button>
+        </div>
+
+        <div class="setting-row">
           <span class="setting-label">게임 진행</span>
           <button type="button" id="btnRestartGame" class="setting-btn restart-btn">🔄 처음부터 재시작</button>
         </div>
-
-        <div id="pwaInstallRow" class="setting-row hidden">
-          <span class="setting-label">앱으로 설치 (오프라인 지원)</span>
-          <button type="button" id="btnInstallPwa" class="setting-btn install-btn">📲 앱 설치 (PWA)</button>
-        </div>
       </div>
 
-      <p class="settings-hint">조작: 방향키(이동/사다리) · Space/Z(점프) · Enter(시작)</p>
+      <p id="pwaToastMsg" class="pwa-toast hidden"></p>
+      <p class="settings-hint">PC: 방향키·Space(점프) / 모바일: 하단 터치패드</p>
     </div>
   </div>
 
