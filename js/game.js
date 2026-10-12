@@ -11,7 +11,7 @@
   const JUMP_VEL = -4.55;
   const MOVE_SPEED = 1.55;
   const CLIMB_SPEED = 1.25;
-  const MAX_SAFE_FALL = 46; // 원작 고증: 일정 높이 이상에서 추락 시 낙사
+  const MAX_SAFE_FALL = 76; // 이륙한 바닥 기준 한 층 이상 추락할 때만 낙사 판정
 
   class DonkeyKongGame {
     constructor() {
@@ -86,8 +86,8 @@
           }
         }
 
-        if (e.code === 'KeyP') {
-          this.togglePause();
+        if (e.code === 'KeyP' || e.code === 'Escape') {
+          this.toggleSettingsModal();
         }
 
         if (e.code === 'KeyM') {
@@ -109,10 +109,41 @@
         if (e.code === 'Space' || e.code === 'KeyZ') this.keys.jump = false;
       });
 
-      // 상단 UI 버튼 바인딩
+      // 설정 버튼 및 모달 바인딩
+      const settingsModal = document.getElementById('settingsModal');
+      const btnSettings = document.getElementById('btnSettings');
+      const btnCloseSettings = document.getElementById('btnCloseSettings');
+      const btnRestartGame = document.getElementById('btnRestartGame');
+
+      if (btnSettings) {
+        btnSettings.addEventListener('click', () => {
+          this.toggleSettingsModal(true);
+          btnSettings.blur();
+        });
+      }
+      if (btnCloseSettings) {
+        btnCloseSettings.addEventListener('click', () => {
+          this.toggleSettingsModal(false);
+        });
+      }
+      if (settingsModal) {
+        settingsModal.addEventListener('click', (e) => {
+          if (e.target === settingsModal) {
+            this.toggleSettingsModal(false);
+          }
+        });
+      }
+      if (btnRestartGame) {
+        btnRestartGame.addEventListener('click', () => {
+          this.toggleSettingsModal(false);
+          this.triggerStart();
+        });
+      }
+
       document.querySelectorAll('.stage-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const st = Number(btn.getAttribute('data-stage'));
+          this.toggleSettingsModal(false);
           this.warpToStage(st);
           btn.blur();
         });
@@ -130,33 +161,10 @@
       const crtScreen = document.getElementById('crtScreen');
       if (btnCrt && crtScreen) {
         btnCrt.addEventListener('click', () => {
-          crtScreen.classList.toggle('scanlines');
-          btnCrt.classList.toggle('active');
+          const isOn = crtScreen.classList.toggle('scanlines');
+          btnCrt.classList.toggle('active', isOn);
+          btnCrt.textContent = isOn ? '📺 CRT ON' : '📺 CRT OFF';
           btnCrt.blur();
-        });
-      }
-
-      const btnHelp = document.getElementById('btnHelp');
-      const helpModal = document.getElementById('helpModal');
-      const btnCloseModal = document.getElementById('btnCloseModal');
-      if (btnHelp && helpModal) {
-        btnHelp.addEventListener('click', () => {
-          this.paused = true;
-          helpModal.classList.remove('hidden');
-        });
-      }
-      if (btnCloseModal && helpModal) {
-        btnCloseModal.addEventListener('click', () => {
-          helpModal.classList.add('hidden');
-          this.paused = false;
-        });
-      }
-      if (helpModal) {
-        helpModal.addEventListener('click', (e) => {
-          if (e.target === helpModal) {
-            helpModal.classList.add('hidden');
-            this.paused = false;
-          }
         });
       }
 
@@ -165,6 +173,25 @@
           this.triggerStart();
         }
       });
+    }
+
+    toggleSettingsModal(forceOpen) {
+      const settingsModal = document.getElementById('settingsModal');
+      if (!settingsModal) return;
+      const shouldOpen = forceOpen !== undefined ? forceOpen : settingsModal.classList.contains('hidden');
+      if (shouldOpen) {
+        settingsModal.classList.remove('hidden');
+        if (this.state === 'PLAYING' && !this.paused) {
+          this.paused = true;
+          global.DKAudio.stopBgm();
+        }
+      } else {
+        settingsModal.classList.add('hidden');
+        if (this.state === 'PLAYING' && this.paused) {
+          this.paused = false;
+          global.DKAudio.startBgm(this.player && this.player.hammerTimer > 0 ? 'hammer' : 'stage');
+        }
+      }
     }
 
     setVirtualKey(code, pressed) {
@@ -673,10 +700,6 @@
       } else {
         if (p.onGround) {
           p.onGround = false;
-          p.fallStartY = p.y;
-        }
-        // 상승 중 최고점 기준으로 낙하 시작 높이 갱신
-        if (p.vy < 0 && p.y < p.fallStartY) {
           p.fallStartY = p.y;
         }
       }

@@ -1,17 +1,14 @@
 /* ==========================================================================
-   Donkey Kong (1981) Arcade Clone — Retro Arcade Cabinet & PWA Responsive UI
+   Donkey Kong (1981) — Pure Game Screen & Settings Modal Styles
    ========================================================================== */
 :root {
-  --bg-dark: #07070c;
-  --cabinet-blue: #0078c8;
+  --bg-dark: #050508;
   --nintendo-red: #e60012;
-  --girder-pink: #ff5599;
   --arcade-yellow: #ffd000;
   --arcade-cyan: #00e8ff;
-  --panel-bg: #11131f;
-  --panel-border: #283050;
+  --panel-bg: #121524;
+  --panel-border: #2c365a;
   --text-light: #f4f6ff;
-  --text-muted: #9aa4c2;
   --font-pixel: 'Press Start 2P', monospace;
   --font-kr: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -22,185 +19,28 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
-  -webkit-touch-callout: none;
 }
 
 html, body {
   width: 100%;
-  min-height: 100vh;
-  background: radial-gradient(circle at 50% 15%, #161b33 0%, var(--bg-dark) 75%);
+  height: 100vh;
+  background: var(--bg-dark);
   color: var(--text-light);
   font-family: var(--font-kr);
-  overflow-x: hidden;
-}
-
-.arcade-wrapper {
-  max-width: 1060px;
-  margin: 0 auto;
-  padding: 12px 16px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-
-/* --------------------------------------------------------------------------
-   상단 아케이드 마키(간판) 및 컨트롤 바
-   -------------------------------------------------------------------------- */
-.arcade-marquee {
-  width: 100%;
-  background: linear-gradient(135deg, #15192b 0%, #0d101d 100%);
-  border: 2px solid var(--nintendo-red);
-  border-radius: 12px;
-  padding: 10px 16px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  box-shadow: 0 0 22px rgba(230, 0, 18, 0.25);
-}
-
-.marquee-brand {
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.nintendo-badge {
-  background: var(--nintendo-red);
-  color: #ffffff;
-  font-family: var(--font-pixel);
-  font-size: 9px;
-  padding: 5px 8px;
-  border-radius: 99px;
-  letter-spacing: 0.5px;
-}
-
-.marquee-title {
-  font-family: var(--font-pixel);
-  font-size: 18px;
-  color: var(--arcade-cyan);
-  text-shadow: 2px 2px 0 #ff2266;
-  letter-spacing: 1px;
-}
-
-.network-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 232, 255, 0.4);
-}
-
-.network-badge.online {
-  background: rgba(0, 232, 255, 0.12);
-  color: var(--arcade-cyan);
-}
-
-.network-badge.offline {
-  background: rgba(255, 208, 0, 0.18);
-  color: var(--arcade-yellow);
-  border-color: var(--arcade-yellow);
-}
-
-.marquee-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
-.stage-warp-group {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 4px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--panel-border);
-}
-
-.warp-label {
-  font-family: var(--font-pixel);
-  font-size: 9px;
-  color: var(--arcade-yellow);
-  margin-right: 4px;
-}
-
-.stage-btn,
-.util-btn {
-  background: #1d233a;
-  color: var(--text-light);
-  border: 1px solid #38446c;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.stage-btn {
-  font-family: var(--font-pixel);
-  font-size: 9px;
-}
-
-.stage-btn:hover,
-.util-btn:hover {
-  border-color: var(--arcade-cyan);
-  transform: translateY(-1px);
-}
-
-.stage-btn.active {
-  background: var(--nintendo-red);
-  border-color: #ff7788;
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(230, 0, 18, 0.6);
-}
-
-.util-btn.active {
-  background: #143d59;
-  border-color: var(--arcade-cyan);
-  color: var(--arcade-cyan);
-}
-
-.util-btn.muted {
-  background: #3a1c24;
-  border-color: #ff4466;
-  color: #ff99aa;
-}
-
-.install-btn {
-  background: linear-gradient(135deg, #ff8800, #e60012);
-  border-color: #ffd000;
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(255, 136, 0, 0.5);
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* --------------------------------------------------------------------------
-   메인 아케이드 캐비닛 베젤 & CRT 화면
-   -------------------------------------------------------------------------- */
-.cabinet-body {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
   justify-content: center;
-  gap: 20px;
 }
 
-.bezel-frame {
-  background: linear-gradient(180deg, #0066b2 0%, #00427a 100%);
-  padding: 14px;
-  border-radius: 18px;
-  border: 4px solid #38a8ff;
-  box-shadow:
-    0 14px 38px rgba(0, 0, 0, 0.75),
-    inset 0 0 18px rgba(0, 0, 0, 0.6);
+/* 오직 게임 화면만 중앙에 꽉 차게 배치 */
+.game-only-stage {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
 }
 
 .crt-screen {
@@ -208,11 +48,14 @@ html, body {
   background: #000000;
   border-radius: 10px;
   overflow: hidden;
-  border: 4px solid #181a24;
-  box-shadow: inset 0 0 24px rgba(0, 232, 255, 0.14);
+  border: 3px solid #222842;
+  box-shadow: 0 0 36px rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 브라운관 CRT 스캔라인 오버레이 효과 */
+/* 브라운관 CRT 스캔라인 효과 */
 .crt-screen.scanlines::after {
   content: '';
   position: absolute;
@@ -220,12 +63,12 @@ html, body {
   background:
     linear-gradient(
       rgba(18, 16, 16, 0) 50%,
-      rgba(0, 0, 0, 0.32) 50%
+      rgba(0, 0, 0, 0.3) 50%
     ),
     radial-gradient(
       circle at center,
-      transparent 65%,
-      rgba(0, 0, 0, 0.42) 100%
+      transparent 68%,
+      rgba(0, 0, 0, 0.4) 100%
     );
   background-size: 100% 4px, 100% 100%;
   pointer-events: none;
@@ -234,213 +77,41 @@ html, body {
 
 #gameCanvas {
   display: block;
-  width: 448px;
-  height: 512px;
+  height: min(94vh, calc((100vw - 24px) * (512 / 448)));
+  width: auto;
+  aspect-ratio: 448 / 512;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
-/* --------------------------------------------------------------------------
-   우측 고증 & 조작 안내 패널
-   -------------------------------------------------------------------------- */
-.info-panel {
-  width: 310px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.info-card {
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-}
-
-.info-card h2 {
-  font-size: 14px;
-  color: var(--arcade-yellow);
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--panel-border);
-  padding-bottom: 6px;
-}
-
-.key-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.key-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-kbd {
-  background: #232a45;
-  border: 1px solid #4a5785;
-  border-bottom-width: 3px;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: var(--font-pixel);
-  font-size: 9px;
-  color: var(--arcade-cyan);
-}
-
-.lore-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: #d5dcf2;
-}
-
-.lore-list strong {
-  color: var(--arcade-cyan);
-}
-
-.lore-list em {
-  color: #ff7799;
-  font-style: normal;
-  font-weight: 700;
-}
-
-/* --------------------------------------------------------------------------
-   모바일 & 터치스크린 가상 아케이드 조이스틱 (PWA 스탠드얼론 완벽 지원)
-   -------------------------------------------------------------------------- */
-.touch-controls {
-  width: 100%;
-  max-width: 500px;
-  background: linear-gradient(180deg, #161b2e 0%, #0e111f 100%);
-  border: 2px solid #2b3558;
-  border-radius: 16px;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-}
-
-.dpad-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.dpad-middle-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.dpad-center {
-  width: 38px;
-  height: 38px;
-  background: #1b2238;
+/* 게임 화면 우측 상단 미니 설정 버튼 */
+.settings-fab {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  background: rgba(18, 21, 36, 0.78);
+  color: var(--text-light);
+  border: 1px solid rgba(0, 232, 255, 0.45);
   border-radius: 6px;
-}
-
-.dpad-btn {
-  width: 48px;
-  height: 44px;
-  background: #252f4d;
-  color: #ffffff;
-  border: 2px solid #495a8f;
-  border-bottom-width: 4px;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: 900;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: manipulation;
-}
-
-.dpad-btn.pressed,
-.dpad-btn:active {
-  background: var(--arcade-cyan);
-  color: #000000;
-  border-color: #ffffff;
-  transform: translateY(2px);
-}
-
-.action-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.coin-row {
-  display: flex;
-  gap: 8px;
-}
-
-.arcade-start-btn,
-.arcade-pause-btn {
-  font-family: var(--font-pixel);
-  font-size: 8px;
-  padding: 7px 10px;
-  border-radius: 99px;
-  border: 2px solid #ffffff;
-  cursor: pointer;
-}
-
-.arcade-start-btn {
-  background: #ff8800;
-  color: #000000;
-}
-
-.arcade-pause-btn {
-  background: #2b3558;
-  color: #ffffff;
-}
-
-.jump-btn {
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ff4d5e 0%, var(--nintendo-red) 70%, #99000c 100%);
-  border: 4px solid #ff99a8;
-  box-shadow: 0 6px 0 #660008, 0 10px 20px rgba(230, 0, 18, 0.5);
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.jump-btn.pressed,
-.jump-btn:active {
-  transform: translateY(4px);
-  box-shadow: 0 2px 0 #660008, 0 4px 10px rgba(230, 0, 18, 0.6);
-}
-
-.jump-main {
-  font-family: var(--font-pixel);
+  padding: 5px 10px;
   font-size: 12px;
-}
-
-.jump-sub {
-  font-size: 11px;
   font-weight: 700;
-  opacity: 0.9;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: all 0.15s ease;
 }
 
-/* --------------------------------------------------------------------------
-   고증/도움말 모달
-   -------------------------------------------------------------------------- */
+.settings-fab:hover {
+  background: rgba(230, 0, 18, 0.9);
+  border-color: #ffffff;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* 설정 모달 */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -453,13 +124,13 @@ kbd {
 }
 
 .modal-content {
-  background: #121626;
+  background: var(--panel-bg);
   border: 2px solid var(--arcade-cyan);
   border-radius: 14px;
-  max-width: 680px;
+  max-width: 400px;
   width: 100%;
   padding: 20px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9);
 }
 
 .modal-header {
@@ -468,7 +139,7 @@ kbd {
   justify-content: space-between;
   border-bottom: 1px solid var(--panel-border);
   padding-bottom: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .modal-header h2 {
@@ -484,71 +155,91 @@ kbd {
   cursor: pointer;
 }
 
-.modal-quote {
-  color: var(--arcade-cyan);
-  font-weight: 700;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-
-.stage-guide-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+.settings-list {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.guide-item {
-  background: rgba(255, 255, 255, 0.04);
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--panel-border);
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px 12px;
 }
 
-.guide-item h3 {
-  font-size: 13.5px;
-  color: #ff7799;
-  margin-bottom: 6px;
+.setting-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #dbe2f8;
 }
 
-.guide-item p {
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: #d6def5;
+.setting-btn,
+.stage-btn {
+  background: #1e2640;
+  color: var(--text-light);
+  border: 1px solid #3f4e80;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* --------------------------------------------------------------------------
-   반응형 미디어 쿼리 (모바일 / 태블릿 PWA 완벽 대응)
-   -------------------------------------------------------------------------- */
-@media (max-width: 860px) {
-  .cabinet-body {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .info-panel {
-    width: 100%;
-    max-width: 484px;
-  }
+.stage-warp-group {
+  display: flex;
+  gap: 4px;
 }
 
-@media (max-width: 520px) {
-  .arcade-wrapper {
-    padding: 8px 8px 18px;
-    gap: 10px;
-  }
+.stage-btn {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  padding: 6px 8px;
+}
 
-  .marquee-title {
-    font-size: 14px;
-  }
+.setting-btn:hover,
+.stage-btn:hover {
+  border-color: var(--arcade-cyan);
+}
 
-  .bezel-frame {
-    padding: 8px;
-  }
+.setting-btn.active {
+  background: #143d59;
+  border-color: var(--arcade-cyan);
+  color: var(--arcade-cyan);
+}
 
-  #gameCanvas {
-    width: calc(100vw - 36px);
-    max-width: 420px;
-    height: auto;
-    aspect-ratio: 448 / 512;
-  }
+.stage-btn.active {
+  background: var(--nintendo-red);
+  border-color: #ff8899;
+  color: #ffffff;
+}
+
+.setting-btn.muted {
+  background: #3a1c24;
+  border-color: #ff4466;
+  color: #ff99aa;
+}
+
+.restart-btn {
+  background: #2b3558;
+  border-color: var(--arcade-yellow);
+  color: var(--arcade-yellow);
+}
+
+.install-btn {
+  background: linear-gradient(135deg, #ff8800, #e60012);
+  border-color: #ffd000;
+  color: #ffffff;
+}
+
+.settings-hint {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 11.5px;
+  color: #93a0c6;
 }
