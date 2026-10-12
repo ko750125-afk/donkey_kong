@@ -477,19 +477,149 @@
     },
 
     /**
-     * 50m 스테이지 시멘트(파이 팬) 렌더링
+     * 50m 스테이지 중앙 대형 화염 구덩이(활활 타오르는 불꽃) 렌더링
      */
-    drawCementPan(ctx, pan) {
+    drawFirePit(ctx, fp, tick = 0) {
+      ctx.save();
+      const bx = fp.x - 4; // 좌우 컨베이어 끝단(198~250) 사이를 꽉 채움
+      const bw = fp.w + 8; // 52px
+      const baseY = fp.y + 18; // 철골 바닥 라인 부근 (y=312)
+
+      // 1) 배후 열기 후광(붉은 글로우)
+      const pulse = 0.22 + 0.1 * Math.sin(tick * 0.2);
+      ctx.fillStyle = `rgba(255, 40, 0, ${pulse.toFixed(2)})`;
+      ctx.beginPath();
+      ctx.arc(bx + bw / 2, baseY - 10, 32, Math.PI, 0, false);
+      ctx.fill();
+
+      // 2) 하단 용광로 화로 받침대 & 시뻘건 숯불 바닥
+      ctx.fillStyle = '#2b0f0a';
+      ctx.fillRect(bx, baseY - 4, bw, 12);
+      ctx.fillStyle = '#5a180c';
+      ctx.fillRect(bx + 2, baseY - 2, bw - 4, 8);
+
+      // 화로 테두리 위험 경고 줄무늬 (검정/노랑)
+      for (let sx = bx; sx < bx + bw; sx += 8) {
+        ctx.fillStyle = (sx / 8) % 2 === 0 ? '#ffcc00' : '#1a0808';
+        ctx.fillRect(sx, baseY + 5, 4, 3);
+      }
+
+      // 이글거리는 용암/석탄 베이스
+      ctx.fillStyle = '#ff2200';
+      ctx.fillRect(bx + 3, baseY - 5, bw - 6, 5);
+
+      // 3) 활활 타오르는 5갈래 대형 불꽃 기둥 (외곽 진홍 -> 주황 -> 노랑 -> 백열 코어)
+      const tongues = 5;
+      const colW = bw / tongues;
+
+      for (let i = 0; i < tongues; i++) {
+        const cx = bx + colW * (i + 0.5);
+        const wave = Math.sin(tick * 0.28 + i * 1.45);
+        const wave2 = Math.cos(tick * 0.36 + i * 2.1);
+        const centerBoost = i === 2 ? 9 : i === 1 || i === 3 ? 5 : 0;
+        const flameH = 20 + centerBoost + Math.round(wave * 6);
+        const tipX = cx + wave2 * 3.5;
+        const topY = baseY - 3 - flameH;
+
+        // 외곽 진홍색 불꽃 혀
+        ctx.fillStyle = '#ff1a00';
+        ctx.beginPath();
+        ctx.moveTo(cx - colW * 0.65, baseY - 2);
+        ctx.quadraticCurveTo(cx - colW * 0.45, baseY - flameH * 0.55, tipX, topY);
+        ctx.quadraticCurveTo(cx + colW * 0.45, baseY - flameH * 0.55, cx + colW * 0.65, baseY - 2);
+        ctx.closePath();
+        ctx.fill();
+
+        // 중간 주황색 불꽃 혀
+        ctx.fillStyle = '#ff7700';
+        ctx.beginPath();
+        ctx.moveTo(cx - colW * 0.45, baseY - 2);
+        ctx.quadraticCurveTo(cx - colW * 0.25, baseY - flameH * 0.45, tipX * 0.7 + cx * 0.3, topY + 5);
+        ctx.quadraticCurveTo(cx + colW * 0.25, baseY - flameH * 0.45, cx + colW * 0.45, baseY - 2);
+        ctx.closePath();
+        ctx.fill();
+
+        // 내부 노란색 불꽃 심지
+        ctx.fillStyle = '#ffe600';
+        ctx.beginPath();
+        ctx.moveTo(cx - colW * 0.28, baseY - 2);
+        ctx.lineTo(cx + wave * 1.5, topY + 11);
+        ctx.lineTo(cx + colW * 0.28, baseY - 2);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // 4) 중심부 백열 코어
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 4; i++) {
+        const hx = bx + 8 + i * 10 + ((tick + i * 3) % 3);
+        ctx.fillRect(hx, baseY - 6, 5, 3);
+      }
+
+      // 5) 위로 튀어 오르는 불똥(Sparks) 파티클 6개
+      for (let s = 0; s < 6; s++) {
+        const cycle = (tick * 1.4 + s * 11) % 28;
+        const sx = bx + 6 + ((s * 9 + Math.round(Math.sin(tick * 0.15 + s) * 4)) % (bw - 12));
+        const sy = baseY - 12 - cycle;
+        ctx.fillStyle = cycle < 14 ? '#ffff00' : '#ff4400';
+        const size = cycle < 18 ? 2 : 1;
+        ctx.fillRect(sx, sy, size, size);
+      }
+
+      ctx.restore();
+    },
+
+    /**
+     * 50m 스테이지 컨베이어 벨트 위를 이동하는 타오르는 불씨(Ember) 렌더링
+     */
+    drawCementPan(ctx, pan, tick = 0) {
       ctx.save();
       const x = Math.round(pan.x);
       const y = Math.round(pan.y);
-      // 시멘트 용기(사다리꼴)
-      ctx.fillStyle = '#ff2266';
-      ctx.fillRect(x, y + 4, 16, 6);
+      const phase = Math.floor((tick + Math.abs(x)) / 4);
+      const dir = pan.girderId === 3 ? -1 : 1; // 화로 방향
+
+      // 1) 바닥에 깔린 벌건 숯불/불씨 덩어리
+      ctx.fillStyle = '#801800';
       ctx.fillRect(x + 2, y + 10, 12, 3);
-      // 담긴 노란/주황 시멘트
-      ctx.fillStyle = '#ffb800';
-      ctx.fillRect(x + 2, y + 1, 12, 4);
+
+      // 2) 외곽 타오르는 붉은 불꽃 (3갈래 불꽃 혀)
+      ctx.fillStyle = '#ff1e00';
+      ctx.beginPath();
+      ctx.moveTo(x + 1, y + 11);
+      ctx.lineTo(x + 1, y + 5 - (phase % 2) * 2);
+      ctx.lineTo(x + 5, y + 7);
+      ctx.lineTo(x + 8 - dir * 1, y - 1 - ((phase + 1) % 3));
+      ctx.lineTo(x + 11, y + 7);
+      ctx.lineTo(x + 15, y + 4 - (phase % 3));
+      ctx.lineTo(x + 15, y + 11);
+      ctx.closePath();
+      ctx.fill();
+
+      // 3) 중간 주황색 불꽃
+      ctx.fillStyle = '#ff7b00';
+      ctx.beginPath();
+      ctx.moveTo(x + 2, y + 11);
+      ctx.lineTo(x + 4, y + 5 - (phase % 2));
+      ctx.lineTo(x + 8, y + 2 - (phase % 2) * 2);
+      ctx.lineTo(x + 12, y + 5 - ((phase + 1) % 2));
+      ctx.lineTo(x + 14, y + 11);
+      ctx.closePath();
+      ctx.fill();
+
+      // 4) 내부 노란 불씨 코어 & 하얀 열기 중심점
+      ctx.fillStyle = '#ffea00';
+      ctx.fillRect(x + 4, y + 6, 8, 4);
+      ctx.fillRect(x + 6, y + 4 - (phase % 2), 4, 3);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 6, y + 8, 4, 2);
+
+      // 5) 불씨 주변에 튀는 불티 도트 2개
+      ctx.fillStyle = phase % 2 === 0 ? '#ffff00' : '#ff4400';
+      ctx.fillRect(x + (phase % 2 === 0 ? 1 : 13), y + 1, 2, 2);
+      ctx.fillRect(x + 7 - dir * 4, y - 2, 2, 2);
+
       ctx.restore();
     },
 

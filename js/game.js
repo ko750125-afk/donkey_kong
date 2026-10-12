@@ -805,6 +805,16 @@
       // 8) 동키콩 본체와 직접 충돌 시 사망
       if (this.rectsOverlap(p.x + 2, p.y + 2, p.w - 4, p.h - 4, this.dk.x + 8, this.dk.y + 6, this.dk.w - 16, this.dk.h - 8)) {
         this.killPlayer();
+        return;
+      }
+
+      // 9) 50m 스테이지 중앙 대형 화염 구덩이(불꽃)와 직접 접촉 시 사망
+      if (this.stage.firePot) {
+        const fp = this.stage.firePot;
+        if (this.rectsOverlap(p.x + 3, p.y + 3, p.w - 6, p.h - 4, fp.x - 2, fp.y - 8, fp.w + 4, fp.h + 10)) {
+          this.killPlayer();
+          return;
+        }
       }
     }
 
@@ -1445,7 +1455,7 @@
       const hammerActive = this.player.hammerTimer > 0;
       this.barrels.forEach((b) => global.DKSprites.drawBarrel(ctx, b));
       this.fireballs.forEach((fb) => global.DKSprites.drawFireball(ctx, fb, this.tick, hammerActive));
-      this.cementPans.forEach((pan) => global.DKSprites.drawCementPan(ctx, pan));
+      this.cementPans.forEach((pan) => global.DKSprites.drawCementPan(ctx, pan, this.tick));
       this.springs.forEach((sp) => global.DKSprites.drawSpring(ctx, sp));
 
       // 점프맨 렌더링
@@ -1633,18 +1643,9 @@
         global.DKSprites.drawOilDrum(ctx, this.stage.oilDrum.x, this.stage.oilDrum.y, this.stage.oilDrum.lit, this.tick);
       }
 
-      // 7) 50m 중앙 시멘트 화로(불통) 렌더링
+      // 7) 50m 중앙 대형 화염 구덩이(활활 타오르는 불꽃) 렌더링
       if (this.stage.firePot) {
-        const fp = this.stage.firePot;
-        ctx.fillStyle = '#d82848';
-        ctx.fillRect(fp.x, fp.y + 6, fp.w, fp.h);
-        ctx.fillStyle = '#00e8ff';
-        ctx.fillRect(fp.x - 2, fp.y + 6, fp.w + 4, 3);
-        const f = Math.floor(this.tick / 6) % 2;
-        ctx.fillStyle = '#ff4400';
-        ctx.fillRect(fp.x + 6, fp.y - (f ? 6 : 2), fp.w - 12, 8);
-        ctx.fillStyle = '#ffff00';
-        ctx.fillRect(fp.x + 12, fp.y - (f ? 2 : 5), fp.w - 24, 6);
+        global.DKSprites.drawFirePit(ctx, this.stage.firePot, this.tick);
       }
 
       ctx.restore();
